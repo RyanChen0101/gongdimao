@@ -421,7 +421,7 @@ function points(){
  const add=(who,n)=>{if(!who||who==='業主')return;per[who]=(per[who]||0)+n;total+=n};
  S.records.forEach(r=>{
   add(r.by,10);if(r.photos&&r.photos.length)add(r.by,5);if(r.assignee)add(r.by,2);
-  if(r.assignee&&r.status==='done'){add(r.assignee,15);if(r.due&&r.doneAt&&iso(r.doneAt)<=r.due)add(r.assignee,5)}
+  if(r.assignee&&r.status==='done'){const w=r.assignee==='全員'?(r.doneBy||'全員'):r.assignee;add(w,15);if(r.due&&r.doneAt&&iso(r.doneAt)<=r.due)add(w,5)}
  });
  return {per,total}}
 const unlockedSet=t=>new Set(ITEMS.filter(i=>i.pts<=t).map(i=>i.id));
@@ -608,13 +608,13 @@ const API={
 };
 const fromP=x=>({id:x.id,name:x.name,type:x.type||'',address:x.address||'',client:x.client||'',pm:x.pm||'',phase:x.phase||'拆除',progress:x.progress||0,start:x.start_date||'',end:x.end_date||'',today:x.today||''});
 const toP=p=>({name:p.name.trim(),type:p.type.trim(),address:p.address.trim(),client:p.client.trim(),pm:p.pm,phase:p.phase,progress:+p.progress||0,start_date:p.start||null,end_date:p.end||null,today:p.today.trim(),updated_at:new Date().toISOString()});
-const fromR=x=>({id:x.id,projectId:x.project_id,ts:Date.parse(x.ts),category:x.category,text:x.text||'',photos:x.photos||[],assignee:x.assignee||'',due:x.due||'',urgent:!!x.urgent,status:x.status,doneAt:x.done_at?Date.parse(x.done_at):null,by:x.by_name||''});
+const fromR=x=>({id:x.id,projectId:x.project_id,ts:Date.parse(x.ts),category:x.category,text:x.text||'',photos:x.photos||[],assignee:x.assignee||'',due:x.due||'',urgent:!!x.urgent,status:x.status,doneAt:x.done_at?Date.parse(x.done_at):null,doneBy:x.done_by||'',by:x.by_name||''});
 let S={projects:[],records:[],profiles:[],contacts:[],cat:null,seen:null};
 let ME=null;
 let PEOPLE=[];
 const MEMBERS=()=>S.profiles.map(p=>p.name);
 const ctLabel=c=>c.trade?`${c.name}（${c.trade}）`:c.name;
-function rebuildPeople(){PEOPLE=[...MEMBERS(),...S.contacts.map(ctLabel),'業主'].filter((v,i,a)=>v&&a.indexOf(v)===i)}
+function rebuildPeople(){PEOPLE=['全員',...MEMBERS(),...S.contacts.map(ctLabel),'業主'].filter((v,i,a)=>v&&a.indexOf(v)===i)}
 async function loadAll(){
  const [pr,rc,tm,pf,ct]=await Promise.all([
   API.sel('projects','select=*&order=created_at.desc'),
@@ -677,6 +677,7 @@ function vOffline(){return `<div class="auth">${catSVG(Object.assign({},LOOK0,{p
 function vSetup(){return `<div class="auth">${catSVG(LOOK0,140)}<h2>尚未完成設定</h2><p class="muted">請在 config.js 填入 Supabase 的 Project URL 與 anon key。</p></div>`}
 function firstRun(){return `<section class="hello"><div class="eyebrow">${TODAY.getMonth()+1}月${TODAY.getDate()}日 星期${WD[TODAY.getDay()]}</div><h2>${esc(ME.name)}，歡迎使用工地貓</h2></section>
  <div class="card" style="padding:18px;margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">${catSVG(Object.assign({},S.cat,{pose:'wave'}),120)}<b style="font-size:17px">先建立第一個專案</b><span class="muted" style="font-size:14px;max-width:32ch">把目前在做的工地加進來，之後到現場就能直接拍照記錄。</span><button class="bigbtn" data-act="pnew">${ic('plus')}新增專案</button></div>`}
+const pmSet=()=>(PD.pm||'').split('、').filter(Boolean);
 function pDraft(p){PD=p?Object.assign({},p):{name:'',type:'',address:'',client:'',pm:ME?ME.name:'',phase:'拆除',progress:0,start:addD(0),end:addD(60),today:''}}
 function vPForm(){
  const ok=PD.name.trim();
@@ -686,7 +687,7 @@ function vPForm(){
   ${fld('type','類型／坪數','例如：32坪 住宅翻新')}
   ${fld('address','地址','例如：台北市信義區松仁路')}
   ${fld('client','業主','例如：林先生')}
-  <div><label class="h">負責人</label><div class="wrapchips">${MEMBERS().map(n=>`<button class="opt ${PD.pm===n?'on':''}" data-act="ppm" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>
+  <div><label class="h">負責人 <em>可複選</em></label><div class="wrapchips">${['全員',...MEMBERS()].map(n=>`<button class="opt ${pmSet().includes(n)?'on':''}" data-act="ppm" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>
   <div><label class="h">目前階段</label><div class="wrapchips">${PHASES.map(ph=>`<button class="opt ${PD.phase===ph?'on':''}" data-act="pph" data-v="${ph}">${ph}</button>`).join('')}</div></div>
   <div><label class="h" for="pf_progress">整體進度 <em id="pfProgL" class="num">${PD.progress}%</em></label><input id="pf_progress" data-pf="progress" type="range" min="0" max="100" step="5" value="${PD.progress}" style="width:100%;accent-color:var(--accent);height:32px"></div>
   <div class="two">${fld('start','開工日','','date')}${fld('end','預計完工','','date')}</div>
@@ -729,10 +730,11 @@ async function saveRecord(){
 async function toggleRecord(id,keep){
  const r=S.records.find(x=>x.id===id);if(!r)return;
  const prev={status:r.status,doneAt:r.doneAt},before=points().total;
- r.status=r.status==='done'?'open':'done';r.doneAt=r.status==='done'?Date.now():null;
- render();const shown=award(before,r.status==='done'?`${short(r.assignee)} 完成了`:'已改回未完成');
+ const prevBy=r.doneBy;r.status=r.status==='done'?'open':'done';r.doneAt=r.status==='done'?Date.now():null;r.doneBy=r.status==='done'&&ME?ME.name:'';prev.doneBy=prevBy;
+ render();const shown=award(before,r.status==='done'?`${r.assignee==='全員'?(ME?ME.name:'有人'):short(r.assignee)} 完成了`:'已改回未完成');
  if(!shown&&keep)recSheet(id);
- try{await API.upd('records',r.id,{status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null})}
+ const patch={status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null,done_by:r.doneBy||null};
+ try{await API.upd('records',r.id,patch).catch(e=>{if(e.status===400&&/done_by/.test(e.message)){delete patch.done_by;return API.upd('records',r.id,patch)}throw e})}
  catch(e){Object.assign(r,prev);render();toast(errMsg(e))}
 }
 async function deleteRecord(id){
@@ -986,7 +988,7 @@ function vRecords(){
 
 function vTodos(){
  let list=S.records.filter(isTodo);
- if(ui.tscope==='me')list=list.filter(r=>ME&&r.assignee===ME.name);
+ if(ui.tscope==='me')list=list.filter(r=>ME&&(r.assignee===ME.name||r.assignee==='全員'));
  const open=list.filter(r=>r.status==='open').sort(byDue);
  const grp=[['逾期',r=>r.due&&diff(r.due)<0],['今天',r=>r.due&&diff(r.due)===0],['明天',r=>r.due&&diff(r.due)===1],['本週',r=>r.due&&diff(r.due)>1&&diff(r.due)<7],['之後',r=>!r.due||diff(r.due)>=7]];
  const done=list.filter(r=>r.status==='done').sort((a,b)=>(b.doneAt||b.ts)-(a.doneAt||a.ts)).slice(0,8);
@@ -1108,7 +1110,7 @@ function recSheet(id){
   <h3>${esc(p?p.name:'')}</h3>
   ${r.text?`<p style="font-size:16px;margin:8px 0 0;overflow-wrap:anywhere">${esc(r.text)}</p>`:''}
   ${r.photos.length?`<div class="imgs">${r.photos.map((s,i)=>phImg(s,`data-act="view" data-id="${r.id}" data-v="${i}"`)).join('')}</div>`:''}
-  ${isTodo(r)?`<div class="card" style="box-shadow:none;background:var(--surface-2);margin-top:12px;padding:12px 14px"><dl class="kv" style="margin:0"><dt>記錄人</dt><dd>${esc(r.by)}</dd><dt>負責人</dt><dd>${esc(r.assignee)}</dd><dt>期限</dt><dd>${r.due?`${md(r.due)} <span class="${r.status==='done'?'':dueCls(r.due)}">${r.status==='done'?'':'· '+rel(r.due)}</span>`:'未設定'}</dd><dt>狀態</dt><dd>${r.status==='done'?'已完成':'處理中'}</dd></dl></div>`:''}
+  ${isTodo(r)?`<div class="card" style="box-shadow:none;background:var(--surface-2);margin-top:12px;padding:12px 14px"><dl class="kv" style="margin:0"><dt>記錄人</dt><dd>${esc(r.by)}</dd><dt>負責人</dt><dd>${esc(r.assignee)}</dd><dt>期限</dt><dd>${r.due?`${md(r.due)} <span class="${r.status==='done'?'':dueCls(r.due)}">${r.status==='done'?'':'· '+rel(r.due)}</span>`:'未設定'}</dd><dt>狀態</dt><dd>${r.status==='done'?'已完成'+(r.doneBy?`（${esc(r.doneBy)}）`:''):'處理中'}</dd></dl></div>`:''}
   <div class="sheet-actions">
    ${isTodo(r)?`<button class="${r.status==='done'?'ghost':'bigbtn'}" style="grid-column:1/-1" data-act="toggle" data-id="${r.id}" data-keep="1">${ic(r.status==='done'?'undo':'check')}${r.status==='done'?'改回未完成':'標記完成'}</button>`:''}
    ${p?`<button class="ghost" data-act="proj" data-id="${p.id}">查看專案</button>`:''}
@@ -1140,7 +1142,7 @@ document.addEventListener('click',e=>{
    OB.busy=true;render();API.ins('profiles',{id:API.sess.user.id,name,role:OB.role}).then(()=>{OB.busy=false;return boot()}).catch(e=>{OB.busy=false;render();toast(errMsg(e))});break}
   case'pnew':close();pDraft(null);go('pform');break;
   case'pedit':{const p=proj(V.id);if(!p)break;pDraft(p);go('pform');break}
-  case'ppm':PD.pm=v;render();break;
+  case'ppm':{let a=pmSet();if(v==='全員')a=a.includes('全員')?[]:['全員'];else{a=a.filter(x=>x!=='全員');a=a.includes(v)?a.filter(x=>x!==v):[...a,v]}PD.pm=a.join('、');render();break}
   case'pph':PD.phase=v;if(v==='完工')PD.progress=100;render();break;
   case'psave':saveProject();break;
   case'pdelask':sheet(`<h3>刪除「${esc(PD.name)}」？</h3><p class="muted" style="margin:6px 0 16px">這個專案的所有紀錄和照片都會一起刪除，無法復原。</p><div class="sheet-actions"><button class="ghost" data-act="close">取消</button><button class="bigbtn" style="background:var(--bad)" data-act="pdel">刪除專案</button></div>`);break;

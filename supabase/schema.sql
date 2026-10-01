@@ -53,8 +53,11 @@ create table if not exists public.records (
   status text not null default 'open' check (status in ('open','done')),
   done_at timestamptz,
   by_name text not null default '',
+  done_by text,                                  -- 誰按下完成（負責人為「全員」時用來算點數）
   created_by uuid default auth.uid() references auth.users(id) on delete set null
 );
+-- 舊版資料庫補欄位（可重複執行）
+alter table public.records add column if not exists done_by text;
 create index if not exists records_project_idx on public.records(project_id);
 create index if not exists records_ts_idx on public.records(ts desc);
 
