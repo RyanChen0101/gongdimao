@@ -61,6 +61,23 @@ alter table public.records add column if not exists done_by text;
 create index if not exists records_project_idx on public.records(project_id);
 create index if not exists records_ts_idx on public.records(ts desc);
 
+-- 開工前準備清單（每個專案一份，可自行增減項目）
+create table if not exists public.checklist_items (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  grp text not null default '其他',
+  title text not null,
+  sort int not null default 0,
+  done boolean not null default false,
+  done_by text,
+  done_at timestamptz,
+  assignee text not null default '',
+  due date,
+  note text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists checklist_project_idx on public.checklist_items(project_id);
+
 -- 團隊貓咪 Yuzu 的造型（全公司共用一筆）
 create table if not exists public.team (
   id int primary key default 1 check (id = 1),
@@ -84,6 +101,7 @@ alter table public.contacts enable row level security;
 alter table public.projects enable row level security;
 alter table public.records  enable row level security;
 alter table public.team     enable row level security;
+alter table public.checklist_items enable row level security;
 
 drop policy if exists "成員可讀" on public.profiles;
 create policy "成員可讀" on public.profiles for select to authenticated using (true);
@@ -109,6 +127,9 @@ create policy "總監可刪除" on public.projects for delete to authenticated u
 
 drop policy if exists "成員全權" on public.records;
 create policy "成員全權" on public.records for all to authenticated using (true) with check (true);
+
+drop policy if exists "成員全權" on public.checklist_items;
+create policy "成員全權" on public.checklist_items for all to authenticated using (true) with check (true);
 
 drop policy if exists "成員可讀寫" on public.team;
 create policy "成員可讀寫" on public.team for select to authenticated using (true);
