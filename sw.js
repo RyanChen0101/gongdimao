@@ -1,6 +1,6 @@
 // 工地貓 Service Worker
 // 每次更新程式時，把 VERSION 的數字加 1，手機就會抓到新版。
-const VERSION = 'gdm-v2';
+const VERSION = 'gdm-v3';
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 

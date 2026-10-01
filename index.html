@@ -39,7 +39,7 @@
   --accent:#2C5E4F; --accent-ink:#FFFFFF; --accent-soft:#DCE8E2;
   --brand:#C4862A; --brand-soft:#F4E5CB;
   --ok:#2E7A4E; --ok-soft:#DBEEE1; --warn:#A86D12; --warn-soft:#F5E8CF; --bad:#BC3E2A; --bad-soft:#F7DFD9;
-  --mat:#3A6896; --mat-soft:#DDE6F1;
+  --mat:#3A6896; --mat-soft:#DDE6F1; --war:#7A4E9A; --war-soft:#EEE4F5;
   --shadow:0 1px 2px rgba(20,30,25,.06),0 4px 14px rgba(20,30,25,.06);
   --f-body:"Noto Sans TC","PingFang TC","Heiti TC","Microsoft JhengHei",system-ui,sans-serif;
   --f-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -51,14 +51,14 @@
   --accent:#72B59D; --accent-ink:#0E1814; --accent-soft:#1E3830;
   --brand:#E2A64C; --brand-soft:#3A2E1A;
   --ok:#62C08A; --ok-soft:#1B3325; --warn:#E2A64C; --warn-soft:#3A2E1A; --bad:#EC7A65; --bad-soft:#3E231E;
-  --mat:#86AADA; --mat-soft:#1F2C3D; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+  --mat:#86AADA; --mat-soft:#1F2C3D; --war:#C7A6E2; --war-soft:#2E2340; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121614; --surface:#1B201E; --surface-2:#222826; --line:#323A36;
   --ink:#E7ECE9; --ink-2:#A8B1AC; --ink-3:#77817B;
   --accent:#72B59D; --accent-ink:#0E1814; --accent-soft:#1E3830;
   --brand:#E2A64C; --brand-soft:#3A2E1A;
   --ok:#62C08A; --ok-soft:#1B3325; --warn:#E2A64C; --warn-soft:#3A2E1A; --bad:#EC7A65; --bad-soft:#3E231E;
-  --mat:#86AADA; --mat-soft:#1F2C3D; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+  --mat:#86AADA; --mat-soft:#1F2C3D; --war:#C7A6E2; --war-soft:#2E2340; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg)}
@@ -132,6 +132,8 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:8px calc(va
 .c-驗收{background:var(--ok-soft);color:var(--ok)}
 .c-材料{background:var(--mat-soft);color:var(--mat)}
 .c-安全{background:var(--warn-soft);color:var(--warn)}
+.c-保固{background:var(--war-soft);color:var(--war)}
+.bigbtn.warbtn{background:var(--war);color:#fff}
 
 .bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;flex:1}
 .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
@@ -384,7 +386,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 /* ---------- constants ---------- */
 const PHASES=['拆除','水電','泥作','木作','油漆','系統櫃','清潔','完工'];
-const CATS=['進度','問題','變更','驗收','材料','安全'];
+const CATS=['進度','問題','變更','驗收','材料','安全','保固'];
+const NEWCATS=['進度','問題','變更','驗收','材料','安全'];
 const short=p=>p.replace(/（.*）/,'');
 
 /* ---------- 團隊貓咪：點數與解鎖 ---------- */
@@ -800,6 +803,7 @@ function urg(r){
  if(r.category==='安全'){s+=15;why.push('工安')}
  if(r.category==='問題'){s+=12;why.push('施工問題')}
  if(r.category==='變更'){s+=6;why.push('業主變更')}
+ if(r.category==='保固'){s+=10;why.push('保固維修')}
  if(p.end&&p.phase!=='完工'&&diff(p.end)<=14&&diff(p.end)>=0){s+=8;why.push(`${diff(p.end)} 天後完工`)}
  if(p.today)s+=5;
  return {s,why}}
@@ -961,16 +965,13 @@ function vProject(){
  return `<div class="card ph">
    <div style="display:flex;gap:10px;align-items:flex-start"><h2 style="flex:1">${esc(p.name)}</h2>${phasePill(p)}</div>
    <dl class="kv" style="margin:0">
-    <dt>類型</dt><dd>${esc(p.type)}</dd>
-    <dt>地址</dt><dd>${esc(p.address)}</dd>
-    <dt>業主</dt><dd>${esc(p.client)}</dd>
-    <dt>負責</dt><dd>${esc(p.pm)}</dd>
+    ${[['類型',p.type],['地址',p.address],['業主',p.client],['負責',p.pm]].filter(x=>x[1]).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}
     <dt>工期</dt><dd>${p.start||p.end?`<span class="num">${p.start?md(p.start):'未定'} – ${p.end?md(p.end):'未定'}</span>${pStatus(p)==='active'&&p.end?` · 剩 <span class="num">${days}</span> 天`:''}`:'未設定'}</dd>
    </dl>
-   ${p.today?`<div class="work">${ic('hammer','sm')}<span>今日：${esc(p.today)}</span></div>`:`<button class="work" data-act="pedit" style="width:100%;text-align:left">${ic('pen','sm')}<span>填寫今日施工內容</span></button>`}
+   ${p.today?`<div class="work">${ic('hammer','sm')}<span>今日：${esc(p.today)}</span></div>`:pStatus(p)==='done'?'':`<button class="work" data-act="pedit" style="width:100%;text-align:left">${ic('pen','sm')}<span>填寫今日施工內容</span></button>`}
    <div><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3);margin-bottom:6px"><span>工程階段</span><span class="num">${p.progress}%</span></div>
    <div class="phases">${PHASES.map((ph,i)=>`<div class="${i<idx?'past':i===idx?'cur':''}"><i></i><span>${ph}</span></div>`).join('')}</div></div>
-   ${pStatus(p)!=='done'?`<button class="bigbtn" data-act="new" data-id="${p.id}">${ic('cam')}新增工地紀錄</button>`:''}
+   ${pStatus(p)!=='done'?`<button class="bigbtn" data-act="new" data-id="${p.id}">${ic('cam')}新增工地紀錄</button>`:`<button class="bigbtn warbtn" data-act="newwar" data-id="${p.id}">${ic('hammer')}新增保固紀錄</button><p class="hint" style="margin:-4px 2px 0;text-align:center">完工專案不會回到首頁；保固待辦會出現在待辦與急辦排序。</p>`}
   </div>
   <div class="tabs">
    <button class="${ui.ptab==='rec'?'on':''}" data-act="ptab" data-v="rec">紀錄 ${recs.length}</button>
@@ -1002,24 +1003,24 @@ function vTodos(){
 
 /* ----- new record form ----- */
 let D=null;
-function newDraft(pid){
+function newDraft(pid,war){
  const last=(()=>{try{return localStorage.getItem('gdm.lastProj')}catch(e){return null}})();
  const ap=activeProjects();
  const p=pid||(ap.find(x=>x.id===last)?last:(ap.find(x=>x.today)||ap[0]||{}).id);
  const by=ME?ME.name:'';
- D={projectId:p,text:'',category:'進度',photos:[],assignee:'',due:'',urgent:false,customDue:false,by};
+ D={war:!!war,projectId:war?pid:p,text:'',category:war?'保固':'進度',photos:[],assignee:'',due:'',urgent:false,customDue:false,by};
 }
 function dueOpts(){
  const fri=(5-TODAY.getDay()+7)%7||7;const mon=(1-TODAY.getDay()+7)%7||7;
  return [['今天',addD(0)],['明天',addD(1)],[fri<=1?'下週五':'本週五',addD(fri)],['下週一',addD(mon)]].filter((x,i,a)=>a.findIndex(y=>y[1]===x[1])===i)}
 function vNew(){
- const ap=activeProjects();
+ const ap=D.war?[proj(D.projectId)].filter(Boolean):activeProjects();
  if(!ap.length)return `${empty('還沒有進行中的專案','先建立專案，才能新增工地紀錄。')}<button class="bigbtn" data-act="pnew">${ic('plus')}新增專案</button>`;
  const ok=D.projectId&&(D.text.trim()||D.photos.length);
  const dues=dueOpts();const isPreset=dues.some(d=>d[1]===D.due);
  return `<div class="f">
   <div><label class="h">專案</label>
-   <div class="proj-sel">${ap.map(p=>`<button class="${D.projectId===p.id?'on':''}" data-act="dp" data-v="${p.id}"><b>${esc(p.name)}</b><span>${pStatus(p)==='soon'?'即將開工':p.phase}</span></button>`).join('')}</div></div>
+   <div class="proj-sel">${ap.map(p=>`<button class="${D.projectId===p.id?'on':''}" data-act="dp" data-v="${p.id}"><b>${esc(p.name)}</b><span>${D.war?'已完工 · 保固':pStatus(p)==='soon'?'即將開工':p.phase}</span></button>`).join('')}</div></div>
   <div><label class="h">照片 <em>${D.photos.length?D.photos.length+' 張':'可多選'}</em></label>
    <div class="photo-row">
     <label class="pbtn cam">${ic('cam')}拍照<input id="camIn" type="file" accept="image/*" capture="environment"></label>
@@ -1028,9 +1029,9 @@ function vNew(){
    ${D.photos.length?`<div class="pgrid">${D.photos.map((s,i)=>`<div><img src="${s}" alt="照片 ${i+1}"><button data-act="rmph" data-v="${i}" aria-label="移除照片">${ic('x','sm')}</button></div>`).join('')}</div>`:''}
   </div>
   <div><label class="h" for="txt">一句話說明</label>
-   <textarea class="in" id="txt" placeholder="例如：主臥天花管線高度不夠，封板前要降 3cm" enterkeyhint="done">${esc(D.text)}</textarea></div>
+   <textarea class="in" id="txt" placeholder="${D.war?'例如：業主反映主臥衣櫃門片下垂，需調整鉸鍊':'例如：主臥天花管線高度不夠，封板前要降 3cm'}" enterkeyhint="done">${esc(D.text)}</textarea></div>
   <div><label class="h">分類</label>
-   <div class="wrapchips">${CATS.map(c=>`<button class="opt cat ${D.category===c?'on c-'+c:''}" data-act="dc" data-v="${c}">${c}</button>`).join('')}</div></div>
+   <div class="wrapchips">${(D.war?['保固','問題','驗收']:NEWCATS).map(c=>`<button class="opt cat ${D.category===c?'on c-'+c:''}" data-act="dc" data-v="${c}">${c}</button>`).join('')}</div></div>
   <div class="people">
    <div><label class="h">記錄人</label>
     <div class="wrapchips">${MEMBERS().map(n=>`<button class="opt ${D.by===n?'on':''}" data-act="dby" data-v="${esc(n)}">${esc(short(n))}</button>`).join('')}</div></div>
@@ -1053,7 +1054,7 @@ function render(){
  if(BARE.includes(V.name)){top.innerHTML='';document.getElementById('main').innerHTML=({login:vLogin,onboard:vOnboard,loading:vLoading,offline:vOffline,setup:vSetup})[V.name]();document.getElementById('nav').hidden=true;bindView();return}
  if(V.name==='home')top.innerHTML=`<div class="brand">${mark()}<div><b>工地貓</b><small>SITE LOG</small></div></div><button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`;
  else{const form=V.name==='new'||V.name==='pform';const sub=stack.length&&!form||['project','urgent','cat'].includes(V.name);
-  top.innerHTML=`${sub||form?`<button class="iconbtn" data-act="back" aria-label="返回" style="margin-left:-10px">${ic('back')}</button>`:''}<h1>${V.name==='project'?esc((proj(V.id)||{}).name||''):V.name==='pform'?(PD&&PD.id?'編輯專案':'新增專案'):TITLES[V.name]}</h1>${form?'':V.name==='project'?`<button class="iconbtn" data-act="pedit" aria-label="編輯專案">${ic('pen')}</button>`:`<button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`}`}
+  top.innerHTML=`${sub||form?`<button class="iconbtn" data-act="back" aria-label="返回" style="margin-left:-10px">${ic('back')}</button>`:''}<h1>${V.name==='project'?esc((proj(V.id)||{}).name||''):V.name==='pform'?(PD&&PD.id?'編輯專案':'新增專案'):V.name==='new'&&D&&D.war?'新增保固紀錄':TITLES[V.name]}</h1>${form?'':V.name==='project'?`<button class="iconbtn" data-act="pedit" aria-label="編輯專案">${ic('pen')}</button>`:`<button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`}`}
  const m=document.getElementById('main');
  m.innerHTML=({home:vHome,projects:vProjects,project:vProject,records:vRecords,todos:vTodos,new:vNew,urgent:vUrgent,cat:vCat,pform:vPForm})[V.name]();
  const nav=document.getElementById('nav');
@@ -1134,6 +1135,7 @@ document.addEventListener('click',e=>{
   case'dby':D.by=v;render();break;
   case'proj':close();ui.ptab='rec';go('project',{id});break;
   case'new':e.preventDefault();close();newDraft(id);go('new');break;
+  case'newwar':close();newDraft(id,true);go('new');break;
   case'rec':recSheet(id);break;
   case'toggle':toggleRecord(id,el.dataset.keep);break;
   case'boot':boot();break;
