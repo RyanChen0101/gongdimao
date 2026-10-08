@@ -91,6 +91,8 @@ create table if not exists public.team (
   updated_at timestamptz not null default now()
 );
 insert into public.team (id) values (1) on conflict (id) do nothing;
+-- 團隊獎勵（v7）
+alter table public.team add column if not exists rewards jsonb not null default '[]';
 
 -- ============ 權限（RLS） ============
 -- 原則：只有登入的公司成員看得到、改得了資料；未登入的人什麼都看不到。

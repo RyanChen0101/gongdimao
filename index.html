@@ -150,6 +150,16 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:8px calc(va
 .itcard .itx{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--ink-3)}
 .itlist{display:flex;flex-direction:column;gap:8px}
 .edited{font-size:11.5px;color:var(--ink-3)}
+.rw{display:flex;gap:12px;align-items:center;padding:12px 14px;min-height:62px}
+.rw + .rw{border-top:1px solid var(--line)}
+.rwe{font-size:26px;width:36px;text-align:center;flex:none;line-height:1}
+.rw .b{flex:1;min-width:0}
+.rw b{font-size:15px;overflow-wrap:anywhere}
+.rw.lock .rwe{filter:grayscale(1);opacity:.45}
+.rw.lock b,.rw.done b{color:var(--ink-3)}
+.rw.hit{background:var(--brand-soft)}
+.cc small.rwline{color:var(--warn);font-weight:500}
+.celebrate .bigemoji{font-size:76px;line-height:1.1;animation:pop .45s cubic-bezier(.3,1.5,.5,1)}
 .brow{display:flex;gap:10px;align-items:center;min-height:44px}
 .brow .bname{flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px}
 .brow.done .bt{color:var(--ink-3);text-decoration:line-through}
@@ -442,7 +452,27 @@ const ITEMS=[
  {id:'hat_white',slot:'hat',name:'白色工地帽',pts:1400},
  {id:'fur_calico',slot:'fur',name:'三花',pts:1500},
  {id:'turtle',slot:'body',name:'設計師高領衫',pts:1700},
- {id:'hat_gold',slot:'hat',name:'金色安全帽',pts:2000}
+ {id:'hat_gold',slot:'hat',name:'金色安全帽',pts:2000},
+ {id:'bg_office',slot:'bg',name:'公司辦公室',pts:2200},
+ {id:'coffee',slot:'prop',name:'咖啡杯',pts:2500},
+ {id:'apron',slot:'body',name:'工作圍裙',pts:2900},
+ {id:'tablet',slot:'pose',name:'看平板',pts:3300},
+ {id:'swatch',slot:'prop',name:'色票扇',pts:3800},
+ {id:'bg_rain',slot:'bg',name:'雨天工地',pts:4300},
+ {id:'raincoat',slot:'body',name:'雨衣',pts:4800},
+ {id:'bucket',slot:'pose',name:'坐油漆桶',pts:5400},
+ {id:'tube',slot:'prop',name:'設計圖筒',pts:6000},
+ {id:'sunglasses',slot:'face',name:'墨鏡',pts:6700},
+ {id:'bg_model',slot:'bg',name:'樣品屋',pts:7500},
+ {id:'measure',slot:'pose',name:'量尺寸',pts:8400},
+ {id:'laser',slot:'prop',name:'雷射水平儀',pts:9300},
+ {id:'suit',slot:'body',name:'西裝外套',pts:10300},
+ {id:'bg_night',slot:'bg',name:'夜間趕工',pts:11500},
+ {id:'box',slot:'pose',name:'睡紙箱',pts:12800},
+ {id:'beanie',slot:'hat',name:'毛帽',pts:14200},
+ {id:'santa',slot:'hat',name:'聖誕帽',pts:15800},
+ {id:'hongbao',slot:'prop',name:'紅包',pts:17500},
+ {id:'bg_spring',slot:'bg',name:'春聯大門',pts:20000}
 ];
 const LOOK0={pose:'sit',fur:'fur_orange',hat:'hat_yellow',body:'',face:'',prop:'',bg:'bg_plain'};
 function points(){
@@ -478,8 +508,21 @@ const SP={
  tape:["..oooo.....",".oyyyyo....","oyyyyyyo...","oyyooyyo...","oyyooyyo...","oyyyyyyoooo",".oyyyyottto","..oooooooo."],
  level:["oooooooooooooooo","oGGGGGolloGGGGGo","oGGGGGooooGGGGGo","oooooooooooooooo"],
  roller:["ooooooooo","oRRRRRRRo","oRRRRRRRo","ooooooooo","......o..","......o..","...oooo..","...o.....","..ooo....","..oho....","..oho....","..oho....","..ooo...."],
- zzz:["oooo","..o.",".o..","oooo"]
+ zzz:["oooo","..o.",".o..","oooo"],
+ coffee:["..s.s...",".s.s....","oooooo..","owwwwooo","owccwo.o","owwwwooo","owwwwo..",".oooo..."],
+ swatch:[".......oo.",".....ooRRo","...ooYYRRo","..oGGYYRo.",".oBGGYYo..",".oBGGYo...","oBBGGo....","oBBGo.....","ooBo......","ooo......."],
+ tube:["..b..",".obo.",".ooo.","oCCCo","ooooo","oTTTo","oTtTo","oTTTo","oTtTo","oTTTo","oTtTo","oTTTo","oTtTo","oTTTo","oCCCo","ooooo"],
+ laser:[".ooooo.","oYYYYYo","orYYYYo","oYYYYYo","ooooooo",".o...o."],
+ hongbao:["ooooooo","oRRRRRo","oRYYYRo","oRYRYRo","oRYYYRo","oRRRRRo","oRRYRRo","oRRRRRo","ooooooo"],
+ tablet:["oooooooooooo","oKKKKKKKKKKo","oKSSSSSSSSKo","oKSwwSSSSSKo","oKSSSwwwSSKo","oKSSSSSSwSKo","oKSSSSSSSSKo","oKKKKKKKKKKo","oooooooooooo"],
+ bucket:["oooooooooooooooooooo","oMMMMMMMMMMMMMMMMMMo","oooooooooooooooooooo",".oBBBGBBBBBBBBBBBBo.",".oBBBGBBBBBBBBBBBBo.",".oBBBBBBBBBBBBBBBBo.",".oGGGGGGGGGGGGGGGGo.",".oGGwwGGGGGGGGGGGGo.",".oGGGGGGGGGGGGGGGGo.",".oBBBBBBBBBBBBBBBBo.",".oBBBBBBBBBBBBBBBBo.","..oooooooooooooooo.."],
+ mcase:[".ooooo.","oyyyyyo","oyyoyyo","oyoooyo","oyyoyyo","oyyyyyo",".ooooo."],
+ beanie:["......oooooooooo......","....ooKKKKKKKKKKoo....","...oKKKKKKKKKKKKKKo...","..oKKKKKKKKKKKKKKKKo..",".oKkKkKkKkKkKkKkKkKko.",".oooooooooooooooooooo."],
+ shades:["...ooooo......ooooo...","oooDLDDDooooooDLDDDooo","...DDDDD......DDDDD...","....DDD........DDD...."]
 };
+const PCOL={o:'#2E2420',y:'#F4C02E',t:'#F7E08A',G:'#3F8F5F',l:'#D4EF8E',R:'#6FA58E',h:'#9A6A3E',
+ s:'#C9C2B8',w:'#F5F1EA',c:'#7A4E2D',Y:'#E8B84A',B:'#3A6896',b:'#7FA8D6',C:'#2C5E4F',T:'#3D4F6B',r:'#E8433A',K:'#2E2E33',S:'#8FC3D9',M:'#B9C2C8'};
+const PROPX={coffee:[[50,43],[40,33]],swatch:[[49,41],[39,31]],tube:[[52,35],[44,25]],laser:[[52,46],[54,46]],hongbao:[[50,42],[40,32]]};
 const FUR={
  fur_orange:{base:'#E8A25C',stripe:'#C8743A',chest:'#F7E6CC',ol:'#3B2A21',eye:'#2B211C',hi:'#FFFFFF',pink:'#E8948E',blush:'#F2B19F'},
  fur_gray:{base:'#DAD5CD',stripe:'#DAD5CD',chest:'#F8F5EF',ol:'#3A3330',eye:'#2B2523',hi:'#FFFFFF',pink:'#E8948E',blush:'#F0B8AE'},
@@ -490,7 +533,14 @@ const FUR={
 const CLOTH={
  vest:(y,x,loaf)=>{const a=loaf?[1,7]:[1,9],s=loaf?[3,6]:[4,7];if(y<a[0]||y>a[1])return null;return s.includes(y)?'#E3E8EA':'#F07A2A'},
  overalls:(y,x,loaf)=>{if(loaf)return y>=4&&y<=8?'#4C6A92':null;if(y>=7&&y<=12)return '#4C6A92';if(y>=2&&y<=6&&x>=7&&x<=14)return (y===3&&(x===8||x===13))?'#E8C547':'#4C6A92';return null},
- turtle:(y,x,loaf)=>{if(loaf)return y<=7?'#2F2F35':null;if(y>9)return null;return y<=1?'#4A4A53':'#2F2F35'}
+ turtle:(y,x,loaf)=>{if(loaf)return y<=7?'#2F2F35':null;if(y>9)return null;return y<=1?'#4A4A53':'#2F2F35'},
+ apron:(y,x,loaf)=>{if(loaf)return y>=3&&x>=2&&x<=13?(y===5&&x>=6&&x<=9?'#C9B48E':'#E9DCC4'):null;
+  if(y<=2)return (x===7||x===14)?'#A88A5E':null;if(y>13||x<6||x>15)return null;return y>=8&&y<=9&&x>=8&&x<=13?'#CDB892':'#E9DCC4'},
+ raincoat:(y,x,loaf)=>{if(loaf)return y<=8?(y===4?'#D9A619':'#F2C230'):null;if(y>13)return null;
+  if(x===10||x===11)return (y===4||y===7||y===10)?'#7A5C10':'#D9A619';return '#F2C230'},
+ suit:(y,x,loaf)=>{if(loaf)return y<=8?'#2E3A52':null;if(y>12)return null;
+  const v=Math.abs(x-10.5);if(y<=6&&v<=(6-y)/1.4+.6)return (x===10||x===11)&&y>=1?'#B8433A':'#F4F4F4';
+  return (y===8&&(x===4||x===17))?'#4A5A7A':'#2E3A52'}
 };
 const HATC={hat_yellow:['#F4C02E','#D9A31A','#FFE58A'],hat_white:['#F4F3EF','#D4D0C6','#FFFFFF'],hat_gold:['#E6B437','#B98A1C','#FFF1B0']};
 const OLC='#2E2420';
@@ -505,26 +555,32 @@ function catPNG(look){
  const dark=(c,k)=>{const n=parseInt(c.slice(1),16);const f=v=>Math.round(v*k).toString(16).padStart(2,'0');return '#'+f(n>>16)+f(n>>8&255)+f(n&255)};
  const draw=(sp,ox,oy,map)=>sp.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')P(ox+x,oy+y,map(ch,x,y))}));
  BGPX[look.bg||'bg_plain'](R,P,D);
- const F=FUR[look.fur]||FUR.fur_orange,loaf=look.pose==='loaf';
+ const F=FUR[look.fur]||FUR.fur_orange,loaf=look.pose==='loaf'||look.pose==='box';
+ const oy=look.pose==='bucket'?-9:0;
  const furMap=part=>(ch,x,y)=>{
   if(ch==='o')return F.ol;
   const cl=look.body&&(part==='body'||part==='loaf')&&'bsc'.includes(ch)&&!(loaf&&y===8&&x<9)?CLOTH[look.body](y,x,loaf):null;
   if(cl)return cl;
   const pt=F.patch&&'bs'.includes(ch)?F.patch(part,x,y):null;
   return {b:pt||F.base,s:pt||F.stripe,c:F.chest,p:F.pink,k:F.blush,e:F.eye,h:F.hi}[ch]};
- const bx=21,by=37,lx=18,ly=42;
+ const bx=21,by=37+oy,lx=18,ly=42;
+ if(look.prop==='laser'){const yy=48;R(0,yy-1,loaf?54:52,1,'#F2A49C');R(0,yy,loaf?54:52,1,'#E8433A')}
  // shadow
  for(let i=0;i<(loaf?34:24);i++){const x=(loaf?lx-1:bx-1)+i;P(x,52,dark(buf[52*N+x],.86));P(x,53,dark(buf[53*N+x],.93))}
  if(loaf){
   draw(SP.ltail,lx+29,ly+3,furMap('tail'));
   draw(SP.loaf,lx,ly,furMap('loaf'));
+  if(look.pose==='box'){for(let i=0;i<5;i++){R(lx-4-i,ly+1-i,5,1,'#B07D45');P(lx-5-i,ly+1-i,'#6E4A26');R(lx+31+i,ly+1-i,5,1,'#B07D45');P(lx+36+i,ly+1-i,'#6E4A26')}R(lx-4,ly+1,40,10,'#6E4A26');R(lx-3,ly+2,38,9,'#C9955B');R(lx-3,ly+2,38,1,'#B07D45');[lx+14,lx+20].forEach(x=>{R(x,ly+4,1,5,'#6E4A26');P(x-1,ly+5,'#6E4A26');P(x+1,ly+5,'#6E4A26');P(x-2,ly+6,'#6E4A26');P(x+2,ly+6,'#6E4A26')})}
  }else{
   draw(SP.tail,bx+19,by+4,furMap('tail'));
   const body=look.pose==='wave'?SP.body.map((r,y)=>y>=10&&y<=13?r.slice(0,11)+'bbbbbb'+r.slice(17):r):SP.body;
   draw(body,bx,by,furMap('body'));
+  if(look.pose==='bucket'){draw(SP.bucket,bx+1,40,ch=>({o:OLC,M:'#B9C2C8',B:'#D6DDE2',G:'#2C5E4F',w:'#F5F1EA'})[ch])}
+  if(look.pose==='measure'){R(1,47,13,2,'#F4E08A');for(let x=2;x<14;x+=2)P(x,47,'#8A6A12');draw(SP.mcase,13,44,ch=>PCOL[ch]);draw(SP.paw,bx-2,by+7,furMap('paw'))}
  }
  const propPos=loaf?{tape:[37,33],level:[33,38],roller:[44,25]}:{tape:[48,44],level:[45,48],roller:[50,39]};
- if(look.prop&&SP[look.prop]){const [x,y]=propPos[look.prop];draw(SP[look.prop],x,y,ch=>({o:OLC,y:'#F4C02E',t:'#F7E08A',G:'#3F8F5F',l:'#D4EF8E',R:'#6FA58E',h:'#9A6A3E'})[ch])}
+ if(look.prop&&SP[look.prop]&&propPos[look.prop]){const [x,y]=propPos[look.prop];draw(SP[look.prop],x,y,ch=>PCOL[ch])}
+ if(look.prop&&PROPX[look.prop]){const [x,y]=PROPX[look.prop][loaf?1:0];const cmap=look.prop==='hongbao'?{o:OLC,R:'#C8372D',Y:'#E8C547'}:look.prop==='swatch'?{o:OLC,R:'#C8553D',Y:'#E8B84A',G:'#5E8C6A',B:'#3A6896'}:look.prop==='laser'?{o:OLC,Y:'#E0B030',r:'#E8433A'}:PCOL;draw(SP[look.prop],x,y,ch=>cmap[ch]||PCOL[ch])}
  const hx=loaf?lx-3:bx,hy=loaf?ly-11:by-14;
  let head=SP.head;
  const setp=(rows,pts,ch)=>{rows=rows.slice();pts.forEach(([x,y])=>{rows[y]=rows[y].slice(0,x)+ch+rows[y].slice(x+1)});return rows};
@@ -532,11 +588,16 @@ function catPNG(look){
  if(loaf){head=setp(head,[[4,8],[5,8],[4,9],[5,9],[16,8],[17,8],[16,9],[17,9]],'b');head=setp(head,[[3,8],[4,9],[5,9],[6,8],[15,8],[16,9],[17,9],[18,8]],'o')}
  draw(head,hx,hy,furMap('head'));
  if(look.face==='glasses'){const gc=look.fur==='fur_black'?'#E9C547':'#8A5A2B';draw(SP.glasses,hx,hy+7,()=>gc)}
+ if(look.face==='sunglasses')draw(SP.shades,hx,hy+7,ch=>({o:'#151213',D:'#2B2B33',L:'#7A7A88'})[ch]);
  if(look.hat&&HATC[look.hat]){const c=HATC[look.hat];draw(SP.hard,hx-1,hy-2,ch=>({o:OLC,y:c[0],Y:c[1],L:c[2]})[ch])}
  if(look.hat==='beret')draw(SP.beret,hx+3,hy+1,ch=>({o:OLC,r:'#B8433A',R:'#8E2F28'})[ch]);
+ if(look.hat==='beanie'){draw(SP.beanie,hx,hy,ch=>({o:OLC,K:'#4F7A6A',k:'#3E6356'})[ch]);D(hx+10,hy-1,1,'#F2EDE4');D(hx+11,hy-1,1,'#F2EDE4')}
+ if(look.hat==='santa'){for(let i=0;i<8;i++){const yy=hy-5+i,l=Math.round(hx+15-i*1.7),r=hx+18+(i>4?1:0);R(l,yy,r-l+1,1,'#C8372D');P(l-1,yy,OLC);P(r+1,yy,OLC)}
+  R(hx,hy+3,22,3,'#F5F1EA');R(hx,hy+2,22,1,OLC);R(hx,hy+6,22,1,OLC);P(hx-1,hy+3,OLC);P(hx-1,hy+4,OLC);P(hx-1,hy+5,OLC);P(hx+22,hy+3,OLC);P(hx+22,hy+4,OLC);P(hx+22,hy+5,OLC);D(hx+19,hy-6,2,'#F5F1EA')}
  if(look.pose==='wave')draw(SP.arm,bx+20,by-7,furMap('arm'));
+ if(look.pose==='tablet'){draw(SP.tablet,bx+5,by+3,ch=>PCOL[ch]);draw(SP.paw,bx+3,by+3,furMap('paw'));draw(SP.paw,bx+15,by+3,furMap('paw'))}
  if(look.pose==='sign'){draw(SP.sign,bx+2,by+2,ch=>({o:OLC,w:'#FFF6E2',g:'#3F8F5F'})[ch]);draw(SP.paw,bx,by+1,furMap('paw'));draw(SP.paw,bx+18,by+1,furMap('paw'))}
- if(loaf){draw(SP.zzz,hx+21,hy-1,()=>'#6E7FA8');draw(SP.zzz.map(r=>r),hx+25,hy-6,()=>'#93A1C2')}
+ if(loaf&&look.hat!=='santa'){draw(SP.zzz,hx+21,hy-1,()=>'#6E7FA8');draw(SP.zzz.map(r=>r),hx+25,hy-6,()=>'#93A1C2')}
  // to PNG at 6x
  const S=6,cv=document.createElement('canvas');cv.width=cv.height=N*S;const g=cv.getContext('2d');
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){g.fillStyle=buf[y*N+x];g.fillRect(x*S,y*S,S,S)}
@@ -547,6 +608,25 @@ const BGPX={
  bg_site:(R,P)=>{R(0,0,64,52,'#CFE0E8');R(3,6,2,46,'#8E9AA0');R(15,6,2,46,'#8E9AA0');R(3,18,14,2,'#8E9AA0');R(3,34,14,2,'#8E9AA0');for(let i=0;i<14;i++)P(4+i,20+i,'#8E9AA0');R(0,4,22,2,'#A8B2B6');R(0,51,64,1,'#B09F86');R(0,52,64,12,'#C8B9A3');for(let x=2;x<64;x+=5)P(x,56+(x%3),'#B5A58C');R(8,49,6,3,'#F07A2A');R(9,45,4,4,'#F07A2A');R(10,42,2,3,'#F07A2A');R(9,46,4,1,'#FFFFFF');R(7,51,8,1,'#C25A18')},
  bg_studio:(R,P)=>{R(0,0,64,52,'#EFE6D8');R(43,7,18,15,'#CFC6B8');R(44,8,16,13,'#FFFFFF');for(let x=44;x<60;x+=4)R(x,8,1,13,'#ECE5DA');for(let y=8;y<21;y+=4)R(44,y,16,1,'#ECE5DA');[[45,18],[47,16],[49,17],[51,14],[53,15],[55,12],[57,10]].forEach(([x,y])=>{P(x,y,'#2C5E4F');P(x+1,y,'#2C5E4F')});R(4,8,5,5,'#2C5E4F');R(4,15,5,5,'#C4862A');R(4,22,5,5,'#B8433A');R(0,51,64,1,'#C2AE92');R(0,52,64,12,'#D8C7AE');for(let x=0;x<64;x+=8)R(x,52,1,12,'#CBB89C')},
  bg_living:(R,P)=>{R(0,0,64,52,'#E9DFD0');R(45,6,17,24,'#FFFFFF');R(46,7,7,10,'#BFDCE8');R(54,7,7,10,'#BFDCE8');R(46,18,7,11,'#CFE5EE');R(54,18,7,11,'#CFE5EE');R(4,44,7,8,'#C4862A');R(4,44,7,1,'#9E6A1E');[[7,30],[5,34],[9,33],[3,38],[11,37],[6,40],[8,36],[10,41],[4,41]].forEach(([x,y])=>R(x,y,3,3,'#5E8C6A'));R(7,32,1,12,'#4A7556');R(0,51,64,1,'#A9825A');R(0,52,64,12,'#C49A6C');R(0,57,64,1,'#B08657');R(0,62,64,1,'#B08657');R(20,52,1,5,'#B08657');R(44,57,1,5,'#B08657')},
+ bg_office:(R,P)=>{R(0,0,64,52,'#E4E8E3');R(3,6,16,18,'#FFFFFF');R(4,7,14,16,'#BFDCE8');R(10,7,1,16,'#FFFFFF');R(4,14,14,1,'#FFFFFF');
+  R(43,36,21,2,'#A97A4E');R(45,38,2,13,'#8C6340');R(60,38,2,13,'#8C6340');R(47,24,14,10,'#2E2E33');R(48,25,12,8,'#9CC6DE');R(49,27,6,1,'#FFFFFF');R(49,29,9,1,'#E8F2F7');R(53,34,2,2,'#2E2E33');R(50,35,8,1,'#2E2E33');
+  R(5,44,6,7,'#D6C7B0');[[6,38],[8,36],[9,39],[5,41],[10,41],[7,40]].forEach(([x,y])=>R(x,y,2,3,'#5E8C6A'));R(0,51,64,1,'#A79C8E');R(0,52,64,12,'#BDB3A6');for(let x=0;x<64;x+=8)R(x,52,1,12,'#B2A89A')},
+ bg_rain:(R,P)=>{R(0,0,64,52,'#A9B4BB');R(3,6,2,46,'#7D878C');R(15,6,2,46,'#7D878C');R(3,18,14,2,'#7D878C');R(3,34,14,2,'#7D878C');R(0,4,22,2,'#8E989D');
+  for(let i=0;i<70;i++){const x=(i*17+5)%64,y=(i*29)%48;P(x,y,'#D6DEE3');P(x-1,y+1,'#D6DEE3')}
+  R(0,51,64,1,'#77736B');R(0,52,64,12,'#8E8A80');R(44,56,12,2,'#A9B9C2');R(46,55,8,1,'#A9B9C2');R(6,59,10,2,'#A9B9C2');R(8,49,6,3,'#F07A2A');R(9,45,4,4,'#F07A2A');R(10,42,2,3,'#F07A2A');R(9,46,4,1,'#FFFFFF');R(7,51,8,1,'#C25A18')},
+ bg_model:(R,P,D)=>{R(0,0,64,52,'#F0EAE1');R(44,8,16,13,'#3A3330');R(45,9,14,11,'#F7F3EC');D(49,14,3,'#C4862A');R(52,12,5,6,'#2C5E4F');
+  R(12,0,1,10,'#3A3330');R(9,9,7,1,'#2C5E4F');R(8,10,9,2,'#2C5E4F');P(12,12,'#FFE8A3');
+  R(0,36,17,8,'#8FA79A');R(0,44,19,6,'#7E978A');R(16,40,4,10,'#7E978A');R(2,50,2,1,'#5B4636');R(15,50,2,1,'#5B4636');
+  R(52,42,9,1,'#A97A4E');R(53,43,1,8,'#8C6340');R(59,43,1,8,'#8C6340');D(56,39,2,'#E8DCC8');R(56,34,1,4,'#5E8C6A');
+  R(0,51,64,1,'#B89C7A');R(0,52,64,12,'#CDB393');R(14,54,40,6,'#E9DED0');R(16,53,36,1,'#E9DED0')},
+ bg_night:(R,P,D)=>{R(0,0,64,52,'#1C2638');[[6,4],[24,7],[34,3],[44,12],[30,16],[60,20],[40,6]].forEach(([x,y])=>P(x,y,'#CFD8E6'));D(52,9,4,'#F1E3B5');D(54,8,4,'#1C2638');
+  R(2,14,18,38,'#26324A');for(let y=18;y<52;y+=8)R(2,y,18,1,'#33415E');for(let x=2;x<20;x+=6)R(x,14,1,38,'#33415E');
+  for(let y=31;y<52;y++){const w=y-31;R(Math.round(56-w*.9),y,Math.round(w*1.8)+1,1,'#2B3A57')}R(56,30,1,22,'#5B6170');R(53,27,7,4,'#E0B030');R(54,31,5,1,'#FFE8A3');
+  R(0,51,64,1,'#2E2E38');R(0,52,64,12,'#3A3A46');R(8,49,6,3,'#F07A2A');R(9,45,4,4,'#F07A2A');R(10,42,2,3,'#F07A2A');R(9,46,4,1,'#FFFFFF')},
+ bg_spring:(R,P)=>{R(0,0,64,52,'#E8DAC5');R(14,4,36,48,'#A8322A');R(31,4,2,48,'#7E241E');[18,23,28,36,41,46].forEach(x=>[10,18,26,34,42].forEach(y=>P(x,y,'#E8C547')));
+  R(16,0,32,4,'#D23A2E');[22,28,34,40].forEach(x=>R(x,1,2,2,'#F0C75E'));R(5,6,6,40,'#D23A2E');R(53,6,6,40,'#D23A2E');for(let y=9;y<42;y+=6){R(7,y,2,3,'#F0C75E');R(55,y,2,3,'#F0C75E')}
+  for(let d=-6;d<=6;d++){const w=6-Math.abs(d);R(32-w,12+d,w*2,1,'#F0C75E')}for(let d=-4;d<=4;d++){const w=4-Math.abs(d);R(32-w,12+d,w*2,1,'#D23A2E')}R(31,10,2,4,'#F0C75E');
+  R(0,51,64,1,'#A9825A');R(0,52,64,12,'#C49A6C')},
  bg_moon:(R,P,D)=>{R(0,0,64,52,'#24202C');[[6,5],[22,9],[30,3],[12,20],[58,34],[36,14],[4,30]].forEach(([x,y])=>P(x,y,'#EADFC2'));D(47,16,10,'#F1D9A0');D(44,13,2,'#E2C47F');D(51,19,2,'#E2C47F');D(49,11,1,'#E2C47F');for(let i=0;i<16;i++)P(i,10+Math.round(i*.45),'#6B4A35');[[3,9],[7,11],[11,13],[5,13],[14,15],[9,9]].forEach(([x,y])=>{P(x,y,'#F4C04E');P(x+1,y,'#F4C04E');P(x,y+1,'#F4C04E')});[[1,11],[9,12],[13,12]].forEach(([x,y])=>R(x,y,2,1,'#4E6B4A'));R(0,51,64,1,'#4A4152');R(0,52,64,12,'#3A3442');for(let x=3;x<64;x+=7)P(x,57,'#463E50')}
 };
 
@@ -559,7 +639,7 @@ function catCard(){
  return `<button class="card catcard" data-act="cat"><span class="catmini">${catSVG(S.cat,76)}</span>
   <span class="cc"><span class="eyebrow">團隊貓咪 YUZU</span><b><span class="num">${total}</span> 點</b>
   <span class="cbar"><i style="width:${pct}%"></i></span>
-  <small>${n?`再 <span class="num">${n.pts-total}</span> 點解鎖「${n.name}」`:'全部解鎖了！'}</small></span>${ic('chev','sm')}</button>`}
+  <small>${n?`再 <span class="num">${n.pts-total}</span> 點解鎖「${n.name}」`:'全部造型都解鎖了！'}</small><small class="rwline">${rwLine(total)}</small></span>${ic('chev','sm')}</button>`}
 function vCat(){
  const {per,total}=points(),un=unlockedSet(total),n=nextItem(total);
  const slot=ui.cslot||'pose';
@@ -572,6 +652,7 @@ function vCat(){
    <div class="cbar" style="margin:8px 0 6px"><i style="width:${pct}%"></i></div>
    <div class="muted" style="font-size:13px">${n?`下一個：「${n.name}」，還差 <b class="num" style="color:var(--ink)">${n.pts-total}</b> 點（已解鎖 ${un.size}／${ITEMS.length}）`:'全部 '+ITEMS.length+' 項都解鎖了，大家辛苦了！'}</div>
   </div>
+  ${rwSection(total)}
   <div class="sec"><h2>幫貓咪換造型</h2></div>
   <div class="chips">${SLOTS.map(([k,l])=>`<button class="chip ${slot===k?'on':''}" data-act="cslot" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="itemgrid">
@@ -584,10 +665,66 @@ function vCat(){
   <div class="sec"><h2>怎麼拿點數</h2></div>
   <div class="card" style="padding:4px 14px">${RULES.map(([t,n,w])=>`<div class="rule"><span>${t}<small>${w}</small></span><b class="num">+${n}</b></div>`).join('')}</div>
   <p class="hint">只有公司成員會得到點數；指派給師傅、廠商或業主的待辦，完成後不計點數。指派給「全員」的待辦，點數給按下完成的人。完成後若改回未完成，點數會收回；刪除紀錄也會扣回該筆點數。</p>`}
+
+/* ---------- 團隊獎勵 ---------- */
+const RW_DEFAULT=[
+ {id:'r1',pts:3000,emoji:'🧋',title:'手搖飲一輪'},
+ {id:'r2',pts:6000,emoji:'🍰',title:'團隊下午茶（甜點＋咖啡）'},
+ {id:'r3',pts:10000,emoji:'🍱',title:'團隊午餐聚餐'},
+ {id:'r4',pts:15000,emoji:'🎬',title:'每人兩張電影票'},
+ {id:'r5',pts:20000,emoji:'🔥',title:'晚餐聚餐（燒肉／火鍋）'},
+ {id:'r6',pts:30000,emoji:'🛠️',title:'每人 NT$1,000 工具或設計書預算'},
+ {id:'r7',pts:50000,emoji:'🚗',title:'一日團隊小旅行'}
+];
+let RW_MISSING=false,RWE=null;
+const rewards=()=>(S.rewards&&S.rewards.length?S.rewards:RW_DEFAULT).slice().sort((a,b)=>a.pts-b.pts);
+const isAdmin=()=>!!(ME&&ME.is_admin);
+const nextReward=t=>rewards().find(r=>r.pts>t);
+const pendingRewards=t=>rewards().filter(r=>r.pts<=t&&!r.redeemed);
+function rwLine(t){
+ const pend=pendingRewards(t);
+ if(pend.length)return `🎉 已達成「${esc(pend[0].title)}」${isAdmin()?'，記得安排兌現':'，等總監安排'}`;
+ const n=nextReward(t);return n?`${n.emoji} 下一個獎勵：${esc(n.title)}，還差 <span class="num">${(n.pts-t).toLocaleString()}</span> 點`:'所有團隊獎勵都達成了！';
+}
+function rwSection(t){
+ const list=rewards(),n=nextReward(t);const prevPts=[...list].reverse().find(r=>r.pts<=t);const base=prevPts?prevPts.pts:0;
+ return `<div class="sec"><h2>團隊獎勵</h2>${isAdmin()?`<a data-act="rwedit">編輯獎勵</a>`:''}</div>
+  <div class="card">${list.map(r=>{const reached=r.pts<=t,isNext=n&&n.id===r.id;
+   const st=r.redeemed?`已兌現${r.redeemedAt?' · '+md(iso(r.redeemedAt)):''}`:reached?'已達成，待兌現':`還差 ${(r.pts-t).toLocaleString()} 點`;
+   return `<div class="rw ${r.redeemed?'done':reached?'hit':isNext?'':'lock'}">
+    <span class="rwe">${esc(r.emoji||'🎁')}</span>
+    <div class="b"><b>${esc(r.title)}</b><div class="meta"><span class="num">${r.pts.toLocaleString()} 點</span><span class="${reached&&!r.redeemed?'due-today':''}">${st}</span></div>
+     ${isNext?`<div class="cbar" style="margin-top:6px"><i style="width:${Math.round((t-base)/(r.pts-base)*100)}%"></i></div>`:''}</div>
+    ${reached&&!r.redeemed&&isAdmin()?`<button class="quick" data-act="rwask" data-id="${r.id}">兌現</button>`:''}
+    ${r.redeemed&&isAdmin()?`<button class="iconbtn" data-act="rwundo" data-id="${r.id}" aria-label="改回未兌現">${ic('undo','sm')}</button>`:''}
+   </div>`}).join('')}</div>
+  <p class="hint">團隊點數達到門檻就解鎖獎勵，由總監安排並按「兌現」。</p>`}
+function saveRewards(msg){
+ if(RW_MISSING){toast('資料庫需要更新：請在 Supabase 執行最新的 schema.sql');return Promise.resolve(false)}
+ return API.upd('team',1,{rewards:S.rewards,updated_at:new Date().toISOString()}).then(()=>{if(msg)toast(msg);return true}).catch(e=>{toast(errMsg(e));return false})
+}
+function rwEditSheet(){
+ if(!RWE)RWE=rewards().map(r=>Object.assign({},r));
+ sheet(`<h3>編輯團隊獎勵</h3><p class="muted" style="margin:4px 0 12px;font-size:14px">修改內容或門檻點數；已兌現的紀錄會保留。</p>
+  <div class="itlist">${RWE.map((r,i)=>`<div class="itcard" style="grid-template-columns:64px 1fr">
+   <input class="in" id="rwE${i}" value="${esc(r.emoji||'')}" placeholder="🎁" style="text-align:center">
+   <input class="in" id="rwT${i}" value="${esc(r.title)}" placeholder="獎勵內容" style="padding-right:44px">
+   <input class="in" id="rwP${i}" value="${r.pts}" placeholder="點數" inputmode="numeric" style="grid-column:1/-1">
+   <button class="itx" data-act="rwdel" data-v="${i}" aria-label="刪除這個獎勵">${ic('x','sm')}</button></div>`).join('')}
+   <button class="ghost" data-act="rwadd">${ic('plus','sm')}新增獎勵</button></div>
+  <div class="sheet-actions"><button class="ghost" data-act="rwcancel">取消</button><button class="bigbtn" data-act="rwsave">儲存</button></div>`)}
+function rwReadForm(){RWE.forEach((r,i)=>{const e=document.getElementById('rwE'+i),t=document.getElementById('rwT'+i),p=document.getElementById('rwP'+i);if(e){r.emoji=e.value.trim();r.title=t.value.trim();r.pts=parseInt(String(p.value).replace(/[^0-9]/g,''),10)||0}})}
+
 /* call after any change that can earn points */
 function award(before,msg){
  const after=points().total,gain=after-before;
+ const freshR=rewards().filter(r=>r.pts<=after&&!S.seen.includes('rw:'+r.id));
  const fresh=ITEMS.filter(i=>i.pts<=after&&!S.seen.includes(i.id));
+ if(freshR.length){S.seen.push(...freshR.map(r=>'rw:'+r.id),...fresh.map(i=>i.id));saveTeam();const ot=document.querySelector('.toast');if(ot)ot.remove();clearTimeout(tt);
+  const r=freshR[freshR.length-1];
+  sheet(`<div class="celebrate"><div class="bigemoji">${esc(r.emoji||'🎁')}</div><div class="eyebrow" style="color:var(--warn)">團隊達成獎勵</div><h3>「${esc(r.title)}」</h3><p class="muted" style="margin:0">團隊累積 <b class="num">${after.toLocaleString()}</b> 點。${isAdmin()?'請安排兌現，完成後在貓咪小屋按「兌現」。':'總監會安排兌現，辛苦大家了！'}${fresh.length?`<br>同時解鎖 ${fresh.length} 個新造型。`:''}</p></div>
+   <div class="sheet-actions"><button class="ghost" data-act="close">好</button><button class="bigbtn" data-act="cat">去貓咪小屋</button></div>`);
+  return true}
  if(fresh.length){S.seen.push(...fresh.map(i=>i.id));saveTeam();const ot=document.querySelector('.toast');if(ot)ot.remove();clearTimeout(tt);
   const it=fresh[fresh.length-1];
   sheet(`<div class="celebrate">${catSVG(previewLook(it),200)}<div class="eyebrow" style="color:var(--warn)">團隊解鎖新造型</div><h3>「${it.name}」</h3><p class="muted" style="margin:0">${msg?esc(msg)+' · ':''}團隊累積 <b class="num">${after}</b> 點${fresh.length>1?`，一次解鎖 ${fresh.length} 項`:''}</p></div>
@@ -641,7 +778,7 @@ const API={
 const fromP=x=>({id:x.id,name:x.name,type:x.type||'',address:x.address||'',client:x.client||'',pm:x.pm||'',phase:x.phase||'拆除',progress:x.progress||0,start:x.start_date||'',end:x.end_date||'',today:x.today||''});
 const toP=p=>({name:p.name.trim(),type:p.type.trim(),address:p.address.trim(),client:p.client.trim(),pm:p.pm,phase:p.phase,progress:+p.progress||0,start_date:p.start||null,end_date:p.end||null,today:p.today.trim(),updated_at:new Date().toISOString()});
 const fromR=x=>({id:x.id,projectId:x.project_id,ts:Date.parse(x.ts),category:x.category,text:x.text||'',photos:x.photos||[],assignee:x.assignee||'',due:x.due||'',urgent:!!x.urgent,status:x.status,doneAt:x.done_at?Date.parse(x.done_at):null,doneBy:x.done_by||'',by:x.by_name||'',items:Array.isArray(x.items)?x.items:[],vendor:x.vendor||'',editedAt:x.edited_at?Date.parse(x.edited_at):null,editedBy:x.edited_by||''});
-let S={projects:[],records:[],profiles:[],contacts:[],checks:[],cat:null,seen:null};
+let S={projects:[],records:[],profiles:[],contacts:[],checks:[],rewards:[],cat:null,seen:null};
 let ME=null;
 let PEOPLE=[];
 const MEMBERS=()=>S.profiles.map(p=>p.name);
@@ -659,7 +796,8 @@ async function loadAll(){
  const t=tm&&tm[0]||{};
  S={projects:pr.map(fromP),records:rc.map(fromR),profiles:pf,contacts:ct,checks:cl.map(fromC),
     cat:t.cat&&Object.keys(t.cat).length?Object.assign({},LOOK0,t.cat):null,
-    seen:Array.isArray(t.seen)&&t.seen.length?t.seen:null};
+    seen:Array.isArray(t.seen)&&t.seen.length?t.seen:null,rewards:Array.isArray(t.rewards)?t.rewards:[]};
+ RW_MISSING=tm&&tm[0]?!('rewards' in tm[0]):false;
  const fresh=!S.cat||!S.seen;
  ME=pf.find(p=>p.id===(API.sess.user||{}).id)||null;
  rebuildPeople();ensureCat();
@@ -1450,6 +1588,16 @@ document.addEventListener('click',e=>{
   case'bp':ui.bproj=v;render();break;
   case'bv':ui.bven=v;render();break;
   case'edit':close();if(editDraft(id))go('new');break;
+  case'rwask':{const r=rewards().find(x=>x.id===id);if(!r)break;sheet(`<div class="celebrate"><div class="bigemoji">${esc(r.emoji||'🎁')}</div><h3>確認已兌現「${esc(r.title)}」？</h3><p class="muted" style="margin:0">兌現後會記下日期和兌現人。</p></div><div class="sheet-actions"><button class="ghost" data-act="close">取消</button><button class="bigbtn" data-act="rwok" data-id="${r.id}">已兌現</button></div>`);break}
+  case'rwok':case'rwundo':{const list=rewards().map(x=>Object.assign({},x));const r=list.find(x=>x.id===id);if(!r)break;
+   if(a==='rwok')Object.assign(r,{redeemed:true,redeemedAt:Date.now(),redeemedBy:ME?ME.name:''});else{delete r.redeemed;delete r.redeemedAt;delete r.redeemedBy}
+   const old=S.rewards;S.rewards=list;close();render();saveRewards(a==='rwok'?`已兌現「${r.title}」`:'已改回未兌現').then(ok=>{if(!ok){S.rewards=old;render()}});break}
+  case'rwedit':RWE=null;rwEditSheet();break;
+  case'rwadd':rwReadForm();RWE.push({id:'r'+Date.now().toString(36),pts:(Math.max(0,...RWE.map(r=>r.pts))||0)+10000,emoji:'🎁',title:''});rwEditSheet();break;
+  case'rwdel':rwReadForm();RWE.splice(+v,1);rwEditSheet();break;
+  case'rwcancel':RWE=null;close();break;
+  case'rwsave':{rwReadForm();const bad=RWE.find(r=>!r.title||!r.pts);if(bad){toast('每個獎勵都要填內容和點數');break}
+   const old=S.rewards;S.rewards=RWE.slice().sort((x,y)=>x.pts-y.pts);RWE=null;close();render();saveRewards('已更新團隊獎勵').then(ok=>{if(!ok){S.rewards=old;render()}});break}
   case'da':D.assignee=v;if(v&&!D.due)D.due=addD(1);if(!v){D.due='';D.urgent=false;D.customDue=false}render();break;
   case'dd':D.due=v;D.customDue=false;render();break;
   case'ddc':D.customDue=true;render();setTimeout(()=>{const i=document.getElementById('dueIn');if(i){i.focus();try{i.showPicker()}catch(_){}}},50);break;
