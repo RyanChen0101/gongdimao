@@ -156,3 +156,39 @@ drop policy if exists "成員可上傳照片" on storage.objects;
 create policy "成員可上傳照片" on storage.objects for insert to authenticated with check (bucket_id = 'photos');
 drop policy if exists "成員可刪照片" on storage.objects;
 create policy "成員可刪照片" on storage.objects for delete to authenticated using (bucket_id = 'photos');
+
+-- ============ v9：施工經驗庫、增量同步、照片空間 ============
+create table if not exists public.lessons (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  what text not null default '',
+  fix text not null default '',
+  phases text[] not null default '{}',
+  trades text[] not null default '{}',
+  photos text[] not null default '{}',
+  source_record uuid,
+  project_id uuid references public.projects(id) on delete set null,
+  recur int not null default 0,
+  recur_log jsonb not null default '[]',
+  by_name text not null default '',
+  edited_by text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.lessons enable row level security;
+drop policy if exists "成員全權" on public.lessons;
+create policy "成員全權" on public.lessons for all to authenticated using (true) with check (true);
+
+alter table public.records add column if not exists updated_at timestamptz not null default now();
+create index if not exists records_updated_idx on public.records(updated_at);
+create or replace function public.touch_updated_at() returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end $$;
+drop trigger if exists records_touch on public.records;
+create trigger records_touch before update on public.records for each row execute function public.touch_updated_at();
+
+create or replace function public.photo_usage() returns bigint
+language sql stable security definer set search_path = public, storage as $$
+  select coalesce(sum((metadata->>'size')::bigint), 0) from storage.objects where bucket_id = 'photos'
+$$;
+revoke all on function public.photo_usage() from public, anon;
+grant execute on function public.photo_usage() to authenticated;

@@ -150,6 +150,23 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:8px calc(va
 .itcard .itx{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--ink-3)}
 .itlist{display:flex;flex-direction:column;gap:8px}
 .edited{font-size:11.5px;color:var(--ink-3)}
+.lcard{padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.lcard b{font-size:15.5px;overflow-wrap:anywhere}
+.lcard p{margin:0;font-size:14px;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ltags{display:flex;flex-wrap:wrap;gap:4px}
+.t-ph{background:var(--accent-soft);color:var(--accent);height:22px}
+.t-tr{background:var(--mat-soft);color:var(--mat);height:22px}
+.lsec{margin-top:12px;display:flex;flex-direction:column;gap:4px}
+.lsec p{margin:0;font-size:15px;overflow-wrap:anywhere}
+.lsec.fix{background:var(--brand-soft);border-radius:12px;padding:10px 12px}
+.lwarn{background:var(--warn-soft);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.lwarn b{font-size:14.5px}
+.lwarn a{font-size:13px;color:var(--warn);font-weight:700;cursor:pointer}
+.lwi{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--surface);border-radius:10px;padding:9px 11px}
+.lwi b{font-size:14px}.lwi span{font-size:13px;color:var(--ink-2)}
+.lhint{color:var(--warn);font-weight:700}
+.lshint{display:flex;flex-direction:column;gap:2px;text-align:left;width:100%;margin-top:8px;background:var(--brand-soft);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--ink-2)}
+.lshint b{color:var(--ink)}.lshint span{font-size:13px}
 .yuzus{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
 .yz{background:var(--surface);border-radius:var(--r);padding:8px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;box-shadow:var(--shadow);border:2px solid transparent}
 .yz.me{border-color:var(--accent)}
@@ -433,7 +450,7 @@ const NEWCATS=['進度','問題','變更','驗收','材料','採購','安全'];
 const short=p=>p.replace(/（.*）/,'');
 
 /* ---------- 團隊貓咪：點數與解鎖 ---------- */
-const RULES=[['新增一筆紀錄',10,'記錄人'],['紀錄附上照片',5,'記錄人'],['指定負責人追蹤',2,'記錄人'],['完成待辦',15,'負責人'],['完成開工準備項目',5,'打勾的人'],['在期限內完成',5,'負責人，額外加']];
+const RULES=[['新增一筆紀錄',10,'記錄人'],['紀錄附上照片',5,'記錄人'],['指定負責人追蹤',2,'記錄人'],['完成待辦',15,'負責人'],['完成開工準備項目',5,'打勾的人'],['整理一則施工經驗',15,'整理的人'],['在期限內完成',5,'負責人，額外加']];
 const SLOTS=[['pose','姿勢'],['fur','毛色'],['hat','帽子'],['body','服裝'],['face','眼鏡'],['prop','道具'],['bg','背景']];
 const OPTIONAL=['hat','body','face','prop'];
 const ITEMS=[
@@ -490,6 +507,7 @@ function points(){
   if(r.assignee&&r.status==='done'){const w=r.assignee==='全員'?(r.doneBy||'全員'):r.assignee;add(w,15);if(r.due&&r.doneAt&&iso(r.doneAt)<=r.due)add(w,5)}
  });
  (S.checks||[]).forEach(c=>{if(c.done)add(c.doneBy||'全員',5)});
+ (S.lessons||[]).forEach(l=>add(l.by,15));
  return {per,total}}
 const unlockedSet=t=>new Set(ITEMS.filter(i=>i.pts<=t).map(i=>i.id));
 const nextItem=t=>ITEMS.find(i=>i.pts>t);
@@ -786,23 +804,28 @@ const API={
 const fromP=x=>({id:x.id,name:x.name,type:x.type||'',address:x.address||'',client:x.client||'',pm:x.pm||'',phase:x.phase||'拆除',progress:x.progress||0,start:x.start_date||'',end:x.end_date||'',today:x.today||''});
 const toP=p=>({name:p.name.trim(),type:p.type.trim(),address:p.address.trim(),client:p.client.trim(),pm:p.pm,phase:p.phase,progress:+p.progress||0,start_date:p.start||null,end_date:p.end||null,today:p.today.trim(),updated_at:new Date().toISOString()});
 const fromR=x=>({id:x.id,projectId:x.project_id,ts:Date.parse(x.ts),category:x.category,text:x.text||'',photos:x.photos||[],assignee:x.assignee||'',due:x.due||'',urgent:!!x.urgent,status:x.status,doneAt:x.done_at?Date.parse(x.done_at):null,doneBy:x.done_by||'',by:x.by_name||'',items:Array.isArray(x.items)?x.items:[],vendor:x.vendor||'',editedAt:x.edited_at?Date.parse(x.edited_at):null,editedBy:x.edited_by||''});
-let S={projects:[],records:[],profiles:[],contacts:[],checks:[],rewards:[],cat:null,seen:null};
+let S={projects:[],records:[],profiles:[],contacts:[],checks:[],lessons:[],rewards:[],cat:null,seen:null};
 let ME=null;
 let PEOPLE=[];
 const MEMBERS=()=>S.profiles.map(p=>p.name);
 const ctLabel=c=>c.trade?`${c.name}（${c.trade}）`:c.name;
 function rebuildPeople(){PEOPLE=['全員',...MEMBERS(),...S.contacts.map(ctLabel),'業主'].filter((v,i,a)=>v&&a.indexOf(v)===i)}
-async function loadAll(){
- const clP=API.sel('checklist_items','select=*&order=sort').then(r=>{CL_MISSING=false;return r}).catch(e=>{if(isAuthErr(e))throw e;CL_MISSING=e.status===404||e.status===400;return []});
- const v5P=API.sel('records','select=items,vendor,edited_at&limit=1').then(()=>{V5_MISSING=false}).catch(e=>{if(isAuthErr(e))throw e;V5_MISSING=e.status===400||e.status===404});
- const [pr,rc,tm,pf,ct,cl]=await Promise.all([
-  API.sel('projects','select=*&order=created_at.desc'),
-  API.sel('records','select=*&order=ts.desc&limit=3000'),
-  API.sel('team','select=*&id=eq.1'),
-  API.sel('profiles','select=*&order=created_at'),
-  API.sel('contacts','select=*&order=created_at'),clP,v5P]);
+const LIGHT='id,project_id,ts,category,by_name,assignee,status,done_by,done_at,due,photos';
+let LAST_UPD=null,UPD_MISSING=false,LAST_FULL=0,SINCE='';
+const maxUpd=rows=>rows.reduce((m,x)=>x.updated_at&&(!m||x.updated_at>m)?x.updated_at:m,null);
+const softSel=(t,q,flag)=>API.sel(t,q).then(r=>{flag(false);return r}).catch(e=>{if(isAuthErr(e))throw e;flag(e.status===404||e.status===400);return []});
+async function fetchRecords(pr){
+ SINCE=new Date(Date.now()-90*864e5).toISOString();
+ const act=pr.filter(p=>p.phase!=='完工').map(p=>p.id);
+ const q1='select=*&or='+encodeURIComponent(`(ts.gte.${SINCE},status.eq.open${act.length?`,project_id.in.(${act.join(',')})`:''})`)+'&order=ts.desc&limit=5000';
+ const q2=`select=${LIGHT}&ts=lt.${encodeURIComponent(SINCE)}&status=neq.open${act.length?`&project_id=not.in.(${act.join(',')})`:''}&limit=20000`;
+ const [full,light]=await Promise.all([API.sel('records',q1),API.sel('records',q2)]);
+ UPD_MISSING=!full.length||!('updated_at' in full[0]);
+ return {rs:full.map(fromR).concat(light.map(x=>Object.assign(fromR(x),{light:true}))),upd:maxUpd(full)};
+}
+function applyState(pr,rs,tm,pf,ct,cl,ls){
  const t=tm&&tm[0]||{};
- S={projects:pr.map(fromP),records:rc.map(fromR),profiles:pf,contacts:ct,checks:cl.map(fromC),
+ S={projects:pr.map(fromP),records:rs,profiles:pf,contacts:ct,checks:cl.map(fromC),lessons:ls.map(fromL),
     cat:t.cat&&Object.keys(t.cat).length?Object.assign({},LOOK0,t.cat):null,
     seen:Array.isArray(t.seen)&&t.seen.length?t.seen:null,rewards:Array.isArray(t.rewards)?t.rewards:[]};
  RW_MISSING=tm&&tm[0]?!('rewards' in tm[0]):false;
@@ -813,6 +836,36 @@ async function loadAll(){
  if(!LOOK_MISSING&&ME&&ME.look&&Object.keys(ME.look).length)S.cat=Object.assign({},LOOK0,ME.look);
  rebuildPeople();ensureCat();
  if(fresh&&ME)saveTeam();
+}
+const smallTables=()=>[
+ API.sel('team','select=*&id=eq.1'),
+ API.sel('profiles','select=*&order=created_at'),
+ API.sel('contacts','select=*&order=created_at'),
+ softSel('checklist_items','select=*&order=sort',v=>{CL_MISSING=v}),
+ softSel('lessons','select=*&order=created_at.desc',v=>{LS_MISSING=v})];
+async function loadAll(){
+ const v5P=API.sel('records','select=items,vendor,edited_at&limit=1').then(()=>{V5_MISSING=false}).catch(e=>{if(isAuthErr(e))throw e;V5_MISSING=e.status===400||e.status===404});
+ const pr=await API.sel('projects','select=*&order=created_at.desc');
+ const [rec,tm,pf,ct,cl,ls]=await Promise.all([fetchRecords(pr),...smallTables(),v5P]);
+ applyState(pr,rec.rs,tm,pf,ct,cl,ls);LAST_UPD=rec.upd;LAST_FULL=Date.now();
+ loadPhotoUsage().then(()=>{if(V.name==='home'&&!layer.innerHTML)render()});
+}
+async function loadDelta(){
+ const [pr,rows,tm,pf,ct,cl,ls]=await Promise.all([API.sel('projects','select=*&order=created_at.desc'),
+  API.sel('records','select=*&updated_at=gt.'+encodeURIComponent(LAST_UPD)+'&order=updated_at&limit=2000'),...smallTables()]);
+ const m=new Map(S.records.map(r=>[r.id,r]));rows.forEach(x=>m.set(x.id,fromR(x)));
+ applyState(pr,[...m.values()],tm,pf,ct,cl,ls);const u=maxUpd(rows);if(u)LAST_UPD=u;
+}
+const loadingP=new Set();
+function ensureProjectFull(pid){
+ if(loadingP.has(pid)||!S.records.some(r=>r.projectId===pid&&r.light))return;loadingP.add(pid);
+ API.sel('records','select=*&project_id=eq.'+pid+'&ts=lt.'+encodeURIComponent(SINCE)).then(rows=>{const m=new Map(rows.map(x=>[x.id,fromR(x)]));S.records=S.records.map(r=>m.get(r.id)||r);if(V.name==='project'&&V.id===pid&&!layer.innerHTML)render()}).catch(()=>{}).finally(()=>loadingP.delete(pid));
+}
+let OLDER_BUSY=false;
+async function loadOlder(){
+ if(OLDER_BUSY)return;OLDER_BUSY=true;render();
+ try{const rows=await API.sel('records','select=*&ts=lt.'+encodeURIComponent(SINCE)+'&order=ts.desc&limit=5000');const m=new Map(rows.map(x=>[x.id,fromR(x)]));S.records=S.records.map(r=>m.get(r.id)||r)}
+ catch(e){toast(errMsg(e))}finally{OLDER_BUSY=false;render()}
 }
 let LOOK_MISSING=false;
 function saveTeam(){const pl={seen:S.seen,updated_at:new Date().toISOString()};if(LOOK_MISSING||!S.teamCat){pl.cat=S.cat;S.teamCat=Object.assign({},S.cat)}return API.upd('team',1,pl).catch(e=>toast(errMsg(e)))}
@@ -1078,6 +1131,120 @@ async function saveEdit(){
  }catch(e){D.saving=false;render();toast(errMsg(e));if(added.length)API.rmPhotos(added).catch(()=>{})}
 }
 
+/* ---------- 施工經驗庫 ---------- */
+const TRADES=['水電','木作','泥作','油漆','系統櫃','鐵件','玻璃','空調','清潔','設計','其他'];
+const LPHASES=PHASES.filter(p=>p!=='完工');
+let LS_MISSING=false,LD=null;
+const fromL=x=>({id:x.id,title:x.title||'',what:x.what||'',fix:x.fix||'',phases:x.phases||[],trades:x.trades||[],photos:x.photos||[],source:x.source_record||null,projectId:x.project_id||null,recur:x.recur||0,log:Array.isArray(x.recur_log)?x.recur_log:[],by:x.by_name||'',ts:x.created_at?Date.parse(x.created_at):Date.now(),editedBy:x.edited_by||''});
+const allTrades=()=>[...new Set([...TRADES,...S.contacts.map(c=>c.trade).filter(Boolean)])];
+const lessonsFor=ph=>(S.lessons||[]).filter(l=>l.phases.includes(ph));
+const guessTrade=a=>{const m=/（(.+)）/.exec(a||'');return m?m[1]:''};
+function bigrams(t){t=String(t||'').replace(/[\s，。、！？!?,.：:；;（）()「」『』\-—…~～#＃‼️]/g,'');const o=new Set();for(let i=0;i<t.length-1;i++)o.add(t.slice(i,i+2));return o}
+function similarLessons(text){
+ const tb=bigrams(text);if(tb.size<2)return [];
+ return (S.lessons||[]).map(l=>{const lb=bigrams(l.title+l.what);let n=0;lb.forEach(b=>{if(tb.has(b))n++});return {l,n}}).filter(x=>x.n>=2).sort((a,b)=>b.n-a.n).slice(0,2).map(x=>x.l)}
+function lessonCard(l){
+ return `<div class="card lcard" data-act="lsn" data-id="${l.id}">
+  <b>${esc(l.title)}</b>${l.fix?`<p>${esc(l.fix)}</p>`:''}
+  <div class="ltags">${l.phases.map(x=>`<span class="pill t-ph">${esc(PH_SHORT[x]||x)}</span>`).join('')}${l.trades.map(x=>`<span class="pill t-tr">提醒 ${esc(x)}</span>`).join('')}</div>
+  <div class="meta"><span>${esc(l.by)} 整理</span>${l.recur?`<span class="due-today">又發生過 ${l.recur} 次</span>`:''}</div></div>`}
+function lessonStats(){
+ const ls=S.lessons||[];if(!ls.length)return '';
+ const tc={};ls.forEach(l=>l.trades.forEach(t=>{tc[t]=(tc[t]||0)+1}));
+ const top=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,5);const max=top.length?top[0][1]:1;
+ const rec=ls.filter(l=>l.recur>0).sort((a,b)=>b.recur-a.recur).slice(0,3);
+ return `<div class="card" style="padding:12px 14px;margin-top:12px">
+  <div class="eyebrow" style="margin-bottom:6px">各工種經驗數</div>
+  ${top.map(([t,n])=>`<div class="lb"><span class="lbn">${esc(t)}</span><span class="cbar"><i style="width:${Math.round(n/max*100)}%"></i></span><b class="num">${n}</b></div>`).join('')||'<p class="muted" style="font-size:13px;margin:0">還沒有標記工種</p>'}
+  ${rec.length?`<div class="eyebrow" style="margin:12px 0 6px">最常重複發生</div>${rec.map((l,i)=>`<div class="rule" data-act="lsn" data-id="${l.id}" style="cursor:pointer"><span>${i+1}. ${esc(l.title)}</span><b class="num">${l.recur} 次</b></div>`).join('')}`:''}
+ </div>`}
+function vLessons(){
+ if(LS_MISSING)return empty('經驗庫尚未啟用','請在 Supabase 執行最新的 schema.sql。');
+ let list=(S.lessons||[]).slice();const q=(ui.lq||'').trim();
+ if(q)list=list.filter(l=>(l.title+l.what+l.fix+l.trades.join('')+l.phases.join('')).includes(q));
+ if(ui.ltr&&ui.ltr!=='all')list=list.filter(l=>l.trades.includes(ui.ltr));
+ if(ui.lph&&ui.lph!=='all')list=list.filter(l=>l.phases.includes(ui.lph));
+ const usedT=allTrades().filter(t=>(S.lessons||[]).some(l=>l.trades.includes(t)));
+ const usedP=LPHASES.filter(p=>(S.lessons||[]).some(l=>l.phases.includes(p)));
+ return `<button class="bigbtn" data-act="lnew" style="margin-top:6px">${ic('plus')}新增施工經驗</button>
+  ${(S.lessons||[]).length?`<label class="search">${ic('search','sm')}<input id="lq" type="search" placeholder="搜尋，例如：燈線、防水" value="${esc(ui.lq||'')}" enterkeyhint="search"></label>
+  ${usedT.length?`<div class="chips"><button class="chip ${!ui.ltr||ui.ltr==='all'?'on':''}" data-act="lft" data-v="all">全部工種</button>${usedT.map(t=>`<button class="chip ${ui.ltr===t?'on':''}" data-act="lft" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>`:''}
+  ${usedP.length?`<div class="chips"><button class="chip ${!ui.lph||ui.lph==='all'?'on':''}" data-act="lfp" data-v="all">全部階段</button>${usedP.map(p=>`<button class="chip ${ui.lph===p?'on':''}" data-act="lfp" data-v="${p}">${p}</button>`).join('')}</div>`:''}
+  ${!q&&(!ui.ltr||ui.ltr==='all')&&(!ui.lph||ui.lph==='all')?lessonStats():''}
+  <div class="stack" style="margin-top:12px">${list.map(lessonCard).join('')||empty('找不到符合的經驗','換個關鍵字或篩選條件試試。')}</div>`
+  :empty('還沒有施工經驗','現場遇到問題處理完後，在紀錄裡按「存成經驗」，下次進到同一個階段就會自動提醒大家。')}`}
+function lessonSheet(id){
+ const l=(S.lessons||[]).find(x=>x.id===id);if(!l)return;const p=l.projectId?proj(l.projectId):null;
+ const last=l.log.slice(-3).reverse();
+ sheet(`<div class="ltags" style="margin-bottom:8px">${l.phases.map(x=>`<span class="pill t-ph">${esc(x)}</span>`).join('')}${l.trades.map(x=>`<span class="pill t-tr">提醒 ${esc(x)}</span>`).join('')}</div>
+  <h3 style="overflow-wrap:anywhere">${esc(l.title)}</h3>
+  ${l.what?`<div class="lsec"><span class="eyebrow">發生什麼事</span><p>${esc(l.what)}</p></div>`:''}
+  ${l.fix?`<div class="lsec fix"><span class="eyebrow">以後怎麼做</span><p>${esc(l.fix)}</p></div>`:''}
+  ${l.photos.length?`<div class="imgs">${l.photos.map(s=>phImg(s)).join('')}</div>`:''}
+  <p class="edited" style="margin:10px 0 0">${esc(l.by)} 整理 · ${md(iso(l.ts))}${l.editedBy?` · ${esc(l.editedBy)} 編輯過`:''}${p?` · 來自 ${esc(p.name)}`:''}</p>
+  ${l.recur?`<p class="edited" style="margin:4px 0 0;color:var(--warn)">又發生過 ${l.recur} 次${last.length?'：'+last.map(x=>`${md(iso(x.at))}${x.by?' '+esc(x.by):''}`).join('、'):''}</p>`:''}
+  <div class="sheet-actions">
+   <button class="ghost" style="grid-column:1/-1;color:var(--warn)" data-act="lagain" data-id="${l.id}">${ic('undo','sm')}又發生了（+1 次）</button>
+   <button class="ghost" data-act="ledit" data-id="${l.id}">${ic('pen','sm')}編輯</button>
+   <button class="ghost danger" data-act="ldelask" data-id="${l.id}">${ic('trash','sm')}刪除</button>
+  </div>`)}
+function vLForm(){
+ const ok=LD.title.trim()&&LD.fix.trim();
+ return `<div class="f">
+  <div><label class="h" for="lfT">標題 <em>必填</em></label><input class="in" id="lfT" data-lf="title" value="${esc(LD.title)}" placeholder="例如：床頭燈線要留長、貼標籤"></div>
+  <div><label class="h" for="lfW">發生什麼事</label><textarea class="in" id="lfW" data-lf="what" placeholder="例如：床頭燈條線掉進木作裡，移開系統櫃才找到">${esc(LD.what)}</textarea></div>
+  <div><label class="h" for="lfF">以後怎麼做 <em>必填</em></label><textarea class="in" id="lfF" data-lf="fix" placeholder="例如：燈線預留 30cm 以上，線頭貼標籤寫用途，提醒後續師傅">${esc(LD.fix)}</textarea></div>
+  <div><label class="h">相關階段 <em>進到這些階段會自動提醒</em></label><div class="wrapchips">${LPHASES.map(p=>`<button class="opt ${LD.phases.includes(p)?'on':''}" data-act="lph" data-v="${p}">${p}</button>`).join('')}</div></div>
+  <div><label class="h">要提醒的工種</label><div class="wrapchips">${allTrades().map(t=>`<button class="opt ${LD.trades.includes(t)?'on':''}" data-act="ltr" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>
+  ${LD.photos.length?`<div><label class="h">照片 <em>${LD.photos.length} 張，來自原本的紀錄</em></label><div class="pgrid">${LD.photos.map((s,i)=>`<div>${phImg(s)}<button data-act="lrmph" data-v="${i}" aria-label="移除照片">${ic('x','sm')}</button></div>`).join('')}</div></div>`:''}
+  <div style="height:8px"></div></div>
+ <div class="savebar"><div class="savebar-in"><button class="ghost" data-act="back">取消</button><button class="bigbtn" data-act="lsave" ${ok&&!LD.busy?'':'disabled'}>${LD.busy?'儲存中…':ic('check')+(LD.id?'儲存修改':'存成經驗')}</button></div></div>`}
+async function saveLesson(){
+ if(!LD||LD.busy||!LD.title.trim()||!LD.fix.trim())return;
+ LD.busy=true;render();
+ const row={title:LD.title.trim(),what:LD.what.trim(),fix:LD.fix.trim(),phases:LD.phases,trades:LD.trades,photos:LD.photos};
+ try{
+  let saved;
+  if(LD.id)saved=await API.upd('lessons',LD.id,Object.assign(row,{edited_by:ME?ME.name:'',updated_at:new Date().toISOString()}));
+  else saved=await API.ins('lessons',Object.assign(row,{source_record:LD.source||null,project_id:LD.projectId||null,by_name:ME?ME.name:''}));
+  if(!saved)throw Object.assign(new Error('no row'),{status:403});
+  const before=points().total;const l=fromL(saved);const i=S.lessons.findIndex(x=>x.id===l.id);
+  if(i>=0)S.lessons[i]=l;else S.lessons.unshift(l);
+  const isNew=!LD.id;LD=null;
+  if(isNew){V=stack.pop()||{name:'home'};go('lessons')}else back();
+  award(before,isNew?'已存成施工經驗':'已更新經驗');
+ }catch(e){LD.busy=false;render();toast(errMsg(e))}
+}
+function lessonHint(){
+ const box=document.getElementById('lsHint');if(!box||!D)return;
+ const hits=similarLessons(D.text);
+ box.hidden=!hits.length;
+ box.innerHTML=hits.map(l=>`<button class="lshint" data-act="lsn" data-id="${l.id}">💡 以前發生過類似的事：<b>${esc(l.title)}</b><span>${esc(l.fix)}</span></button>`).join('');
+}
+function stageCard(p){
+ if(pStatus(p)==='done'||LS_MISSING)return '';
+ const ls=lessonsFor(p.phase);if(!ls.length)return '';
+ return `<div class="lwarn"><div style="display:flex;align-items:baseline;gap:8px"><b style="flex:1">⚠️ 本階段注意事項（${esc(p.phase)}）</b><a data-act="lsnph" data-v="${esc(p.phase)}">全部 ${ls.length} 則</a></div>
+  ${ls.slice(0,3).map(l=>`<button class="lwi" data-act="lsn" data-id="${l.id}"><b>${esc(l.title)}</b><span>${esc(l.fix)}</span></button>`).join('')}</div>`}
+/* ---------- 照片空間 ---------- */
+const PHOTO_LIMIT=1024*1024*1024;
+let PHOTO={bytes:null,est:false};
+async function loadPhotoUsage(){
+ try{const n=await API.req('/rest/v1/rpc/photo_usage',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});PHOTO={bytes:Number(n)||0,est:false}}
+ catch(e){if(isAuthErr(e))return;const c=S.records.reduce((a,r)=>a+(r.photos?r.photos.length:0),0);PHOTO={bytes:c*230*1024,est:true}}
+}
+const photoPct=()=>PHOTO.bytes==null?0:Math.min(100,Math.round(PHOTO.bytes/PHOTO_LIMIT*100));
+const fmtMB=b=>b>=1024**3?(b/1024**3).toFixed(2)+' GB':b<10*1024**2?(b/1024**2).toFixed(1)+' MB':Math.round(b/1024**2)+' MB';
+function photoMeter(){
+ if(PHOTO.bytes==null)return '';const pc=photoPct();
+ return `<div class="card" style="box-shadow:none;background:var(--surface-2);padding:12px 14px;margin-bottom:12px">
+  <div style="display:flex;justify-content:space-between;font-size:14px"><b>照片空間</b><span class="num ${pc>=95?'due-over':pc>=80?'due-today':''}">${PHOTO.est?'約 ':''}${fmtMB(PHOTO.bytes)} / 1 GB（${pc}%）</span></div>
+  <div class="cbar" style="margin-top:8px"><i style="width:${pc}%;${pc>=80?'background:var(--bad)':''}"></i></div>
+  <p class="hint" style="margin:6px 0 0">${pc>=80?'快滿了：可以刪除已完工專案的舊照片，或升級 Supabase Pro（約每月 25 美元，100 GB）。':'免費方案 1 GB，大約可存 4,000–6,000 張照片。'}</p></div>`}
+function photoBanner(){
+ const pc=photoPct();if(pc<80||!(isAdmin()||pc>=95))return '';
+ return `<button class="linkrow" data-act="settings" style="margin:12px 0 0;background:var(--bad-soft);color:var(--bad)">${ic('img')}<span style="color:var(--bad)">照片空間已用 ${pc}%<small style="display:block;font-weight:400;font-size:12.5px">${pc>=95?'即將無法上傳照片，請盡快處理':'建議整理舊照片或升級方案'}</small></span>${ic('chev','sm')}</button>`}
+
 const pmSet=()=>(PD.pm||'').split('、').filter(Boolean);
 function pDraft(p){PD=p?Object.assign({},p):{name:'',type:'',address:'',client:'',pm:ME?ME.name:'',phase:PREP,progress:0,start:addD(14),end:addD(74),today:''}}
 function vPForm(){
@@ -1125,6 +1292,7 @@ async function saveRecord(){
   const r=fromR(row);const before=points().total;S.records.unshift(r);
   try{localStorage.setItem('gdm.lastProj',D.projectId)}catch(_){}
   const pid=D.projectId;D=null;stack.length=0;stack.push({name:'home'});ui.ptab='rec';V={name:'project',id:pid};render();window.scrollTo(0,0);
+  if(PHOTO.bytes!=null&&r.photos.length&&!PHOTO.est)PHOTO.bytes+=r.photos.length*200*1024;
   award(before,r.category===BUY&&r.items.length?`已新增 ${r.items.length} 項採購`:r.assignee?`已儲存，並指派給${short(r.assignee)}`:'已儲存紀錄');
  }catch(e){D.saving=false;render();toast(errMsg(e));if(paths.length)API.rmPhotos(paths).catch(()=>{})}
 }
@@ -1151,6 +1319,7 @@ async function deleteProject(id){
 }
 function settingsSheet(){
  sheet(`<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><span class="catmini" style="width:56px;height:56px">${catSVG(S.cat||LOOK0,56)}</span><div style="flex:1;min-width:0"><h3 style="margin:0">${esc(ME?ME.name:'')}</h3><span class="muted" style="font-size:13px">${esc(ME?ME.role:'')}${ME&&ME.is_admin?' · 管理者':''}</span></div></div>
+  ${photoMeter()}
   <div class="stack">
    <button class="ghost" data-act="profedit">${ic('user','sm')}修改我的名字與職位</button>
    <button class="ghost" data-act="contacts">${ic('hammer','sm')}外部師傅名單</button>
@@ -1183,7 +1352,8 @@ async function boot(){
 let syncing=false;
 async function sync(manual){
  if(!API.sess||!ME||syncing)return;syncing=true;
- try{await loadAll();if(manual||(!['new','pform'].includes(V.name)&&!layer.innerHTML))render();if(manual)toast('已更新')}
+ try{const full=manual||UPD_MISSING||!LAST_UPD||Date.now()-LAST_FULL>10*60e3;await (full?loadAll():loadDelta());
+  if(manual||(!['new','pform','lform'].includes(V.name)&&!layer.innerHTML))render();if(manual)toast('已更新')}
  catch(e){if(isAuthErr(e)){API.store(null);V={name:'login'};render()}else if(manual)toast(errMsg(e))}
  finally{syncing=false}
 }
@@ -1230,7 +1400,7 @@ function siteCard(p,withQuick){
   <div class="site-h"><div class="t"><b>${esc(p.name)}</b><span>${esc([p.type,p.address].filter(Boolean).join(' · ')||'　')}</span></div>${phasePill(p)}</div>
   ${p.today?`<div class="work">${ic('hammer','sm')}<span>今日：${esc(p.today)}</span></div>`:''}
   <div class="site-f"><div class="bar"><i style="width:${p.progress}%"></i></div><span class="num">${p.progress}%</span>
-   ${p.phase===PREP?prepBadge(p):''}${n?`<span>待辦 <b class="num" style="color:var(--ink)">${n}</b></span>`:''}
+   ${p.phase===PREP?prepBadge(p):''}${pStatus(p)!=='done'&&lessonsFor(p.phase).length?`<span class="lhint">⚠️ ${lessonsFor(p.phase).length} 則提醒</span>`:''}${n?`<span>待辦 <b class="num" style="color:var(--ink)">${n}</b></span>`:''}
    ${withQuick?`<button class="quick" data-act="new" data-id="${p.id}">${ic('plus','sm')}紀錄</button>`:''}</div>
  </div>`}
 function todoRow(r,showProj=true){
@@ -1325,7 +1495,7 @@ function vHome(){
  const h=new Date().getHours();const hi=h<11?'早安':h<14?'午安':h<18?'午安':'晚安';
  const sites=activeProjects().filter(p=>p.today);
  const ot=openTodos();const over=ot.filter(r=>r.due&&diff(r.due)<0);const top=ranked().filter(x=>x.s>=20).slice(0,4);
- const recent=S.records.slice().sort((a,b)=>b.ts-a.ts).slice(0,3);
+ const recent=S.records.filter(r=>!r.light).sort((a,b)=>b.ts-a.ts).slice(0,3);
  const soon=S.projects.filter(p=>pStatus(p)==='soon');
  return `<section class="hello"><div class="eyebrow">${TODAY.getMonth()+1}月${TODAY.getDate()}日 星期${WD[TODAY.getDay()]}</div><h2>${hi}，${esc(ME.name)}${sites.length?`，今天有 ${sites.length} 個工地施工中`:''}</h2>
   <div class="stats">
@@ -1333,6 +1503,7 @@ function vHome(){
    <button class="stat" data-act="tab" data-v="todos"><span class="n">${ot.length}</span><span class="l">未完成待辦</span></button>
    <button class="stat ${over.length?'alert':''}" data-act="urgent"><span class="n">${over.length}</span><span class="l">已逾期</span></button>
   </div></section>
+  ${photoBanner()}
   ${catCard()}
   <div class="dash"><div>
    <div class="sec"><h2>今天的工地</h2><a data-act="tab" data-v="projects">全部專案</a></div>
@@ -1360,7 +1531,7 @@ function vProjects(){
 function vProject(){
  const p=proj(V.id);if(!p)return empty('找不到專案','');
  const idx=PHASES.indexOf(p.phase);
- const recs=S.records.filter(r=>r.projectId===p.id);
+ const recs=S.records.filter(r=>r.projectId===p.id&&!r.light);const lightN=S.records.filter(r=>r.projectId===p.id&&r.light).length;if(lightN)setTimeout(()=>ensureProjectFull(p.id),0);
  const todos=recs.filter(isTodo).sort((a,b)=>(a.status==='done')-(b.status==='done')||byDue(a,b));
  const days=p.end?Math.max(0,diff(p.end)):0;
  return `<div class="card ph">
@@ -1373,6 +1544,7 @@ function vProject(){
    <div><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3);margin-bottom:6px"><span>工程階段</span><span class="num">${p.progress}%</span></div>
    <div class="phases">${PHASES.map((ph,i)=>`<div class="${i<idx?'past':i===idx?'cur':''}"><i></i><span>${PH_SHORT[ph]||ph}</span></div>`).join('')}</div></div>
    ${p.phase===PREP||checksOf(p.id).length?prepCard(p):''}
+   ${stageCard(p)}
    ${pStatus(p)!=='done'?`<button class="bigbtn" data-act="new" data-id="${p.id}">${ic('cam')}新增工地紀錄</button>`:`<button class="bigbtn warbtn" data-act="newwar" data-id="${p.id}">${ic('hammer')}新增保固紀錄</button><p class="hint" style="margin:-4px 2px 0;text-align:center">完工專案不會回到首頁；保固待辦會出現在待辦與急辦排序。</p>`}
   </div>
   <div class="tabs">
@@ -1380,22 +1552,23 @@ function vProject(){
    <button class="${ui.ptab==='todo'?'on':''}" data-act="ptab" data-v="todo">待辦 ${todos.filter(r=>r.status==='open').length}</button>
    ${V5_MISSING?'':`<button class="${ui.ptab==='buy'?'on':''}" data-act="ptab" data-v="buy">採購 ${buyItems(p.id).filter(x=>x.it.status!=='arrived').length}</button>`}
   </div>
-  ${ui.ptab==='buy'&&!V5_MISSING?`<button class="ghost" data-act="newbuy" data-id="${p.id}" style="margin-top:10px">${ic('plus','sm')}新增採購</button>${buySections(buyItems(p.id),false)||empty('這個專案還沒有採購','列出要買的材料、數量和需要到場日，到貨前都會追蹤。')}`:ui.ptab==='rec'?recGroups(recs,false):`<div class="card" style="margin-top:10px">${todos.map(r=>todoRow(r,false)).join('')||`<div class="todo"><div class="b muted">這個專案沒有待辦</div></div>`}</div>`}`}
+  ${ui.ptab==='buy'&&!V5_MISSING?`<button class="ghost" data-act="newbuy" data-id="${p.id}" style="margin-top:10px">${ic('plus','sm')}新增採購</button>${buySections(buyItems(p.id),false)||empty('這個專案還沒有採購','列出要買的材料、數量和需要到場日，到貨前都會追蹤。')}`:ui.ptab==='rec'?recGroups(recs,false)+(lightN?`<p class="hint" style="text-align:center">正在載入較早的 ${lightN} 筆紀錄…</p>`:''):`<div class="card" style="margin-top:10px">${todos.map(r=>todoRow(r,false)).join('')||`<div class="todo"><div class="b muted">這個專案沒有待辦</div></div>`}</div>`}`}
 
 function vRecords(){
- let list=S.records;
+ let list=S.records.filter(r=>!r.light);const lightN=S.records.filter(r=>r.light).length;
  if(ui.rproj!=='all')list=list.filter(r=>r.projectId===ui.rproj);
  if(ui.rcat!=='all')list=list.filter(r=>r.category===ui.rcat);
- return `<div class="chips" style="margin-top:6px"><button class="chip ${ui.rproj==='all'?'on':''}" data-act="rp" data-v="all">所有專案</button>${S.projects.map(p=>`<button class="chip ${ui.rproj===p.id?'on':''}" data-act="rp" data-v="${p.id}">${esc(p.name)}</button>`).join('')}</div>
+ return `${LS_MISSING?'':`<button class="linkrow" data-act="lessons" style="margin:6px 0 10px;color:var(--warn)">${ic('spark')}<span>施工經驗庫<small style="display:block;font-weight:400;color:var(--ink-3);font-size:12.5px">${(S.lessons||[]).length?`${S.lessons.length} 則經驗，進到相關階段會自動提醒`:'把踩過的雷記下來，下次自動提醒'}</small></span>${ic('chev','sm')}</button>`}<div class="chips" style="margin-top:6px"><button class="chip ${ui.rproj==='all'?'on':''}" data-act="rp" data-v="all">所有專案</button>${S.projects.map(p=>`<button class="chip ${ui.rproj===p.id?'on':''}" data-act="rp" data-v="${p.id}">${esc(p.name)}</button>`).join('')}</div>
   <div class="chips"><button class="chip ${ui.rcat==='all'?'on':''}" data-act="rc" data-v="all">全部分類</button>${CATS.map(c=>`<button class="chip ${ui.rcat===c?'on':''}" data-act="rc" data-v="${c}">${c}</button>`).join('')}</div>
-  ${recGroups(list)}`}
+  ${recGroups(list)}
+  ${lightN?`<button class="ghost" data-act="older" style="margin-top:16px" ${OLDER_BUSY?'disabled':''}>${OLDER_BUSY?'載入中…':`載入 90 天前的紀錄（${lightN} 筆）`}</button>`:''}`}
 
 function vTodos(){
  let list=S.records.filter(isTodo);
  if(ui.tscope==='me')list=list.filter(r=>ME&&(r.assignee===ME.name||r.assignee==='全員'));
  const open=list.filter(r=>r.status==='open').sort(byDue);
  const grp=[['逾期',r=>r.due&&diff(r.due)<0],['今天',r=>r.due&&diff(r.due)===0],['明天',r=>r.due&&diff(r.due)===1],['本週',r=>r.due&&diff(r.due)>1&&diff(r.due)<7],['之後',r=>!r.due||diff(r.due)>=7]];
- const done=list.filter(r=>r.status==='done').sort((a,b)=>(b.doneAt||b.ts)-(a.doneAt||a.ts)).slice(0,8);
+ const done=list.filter(r=>r.status==='done'&&!r.light).sort((a,b)=>(b.doneAt||b.ts)-(a.doneAt||a.ts)).slice(0,8);
  let html=`<div class="tabs" style="margin-top:6px"><button class="${ui.tscope==='all'?'on':''}" data-act="ts" data-v="all">全部</button><button class="${ui.tscope==='me'?'on':''}" data-act="ts" data-v="me">指派給我</button></div><button class="linkrow" data-act="urgent">${ic('spark')}<span>急辦排序${aiOn()?'與 AI 總結':''}</span>${ic('chev','sm')}</button>${V5_MISSING?'':`<button class="linkrow" data-act="buy" style="color:var(--buy)">${ic('folder')}<span>採購清單<small style="display:block;font-weight:400;color:var(--ink-3);font-size:12.5px">${(()=>{const b=buyItems();const t=b.filter(x=>x.it.status==='todo').length,o=b.filter(x=>x.it.status==='ordered').length;return t||o?`待採購 ${t} · 已下訂 ${o}`:'目前沒有待處理的採購'})()}</small></span>${ic('chev','sm')}</button>`}`;
  let any=false;
  grp.forEach(([lab,f])=>{const g=open.filter(f);if(!g.length)return;any=true;
@@ -1432,7 +1605,7 @@ function vNew(){
    ${D.photos.length?`<div class="pgrid">${D.photos.map((s,i)=>`<div>${s.startsWith('data:')?`<img src="${s}" alt="照片 ${i+1}">`:phImg(s)}<button data-act="rmph" data-v="${i}" aria-label="移除照片">${ic('x','sm')}</button></div>`).join('')}</div>`:''}
   </div>
   <div><label class="h" for="txt">${buy?'說明 <em>選填</em>':'一句話說明'}</label>
-   <textarea class="in" id="txt" placeholder="${buy?'例如：主浴磁磚與收邊條，週五前要到工地':D.war?'例如：業主反映主臥衣櫃門片下垂，需調整鉸鍊':'例如：主臥天花管線高度不夠，封板前要降 3cm'}" enterkeyhint="done">${esc(D.text)}</textarea></div>
+   <textarea class="in" id="txt" placeholder="${buy?'例如：主浴磁磚與收邊條，週五前要到工地':D.war?'例如：業主反映主臥衣櫃門片下垂，需調整鉸鍊':'例如：主臥天花管線高度不夠，封板前要降 3cm'}" enterkeyhint="done">${esc(D.text)}</textarea><div id="lsHint" hidden></div></div>
   <div><label class="h">分類</label>
    <div class="wrapchips">${catList(D.editId?CATS:D.war?['保固','問題','驗收']:NEWCATS).map(c=>`<button class="opt cat ${D.category===c?'on c-'+c:''}" data-act="dc" data-v="${c}">${c}</button>`).join('')}</div></div>
   ${buy?`<div><label class="h">採購品項 <em>${cleanItems().length} 項</em></label>
@@ -1460,19 +1633,19 @@ function vNew(){
  <div class="savebar"><div class="savebar-in"><button class="ghost" data-act="back">取消</button><button class="bigbtn" data-act="save" ${ok&&!D.saving?'':'disabled'}>${D.saving?'儲存中…':ic('check')+(D.editId?'儲存修改':'儲存紀錄')}</button></div></div>`}
 
 /* ---------- render ---------- */
-const TITLES={buy:'採購清單',check:'開工準備清單',projects:'專案',records:'工地紀錄',todos:'待辦事項',new:'新增工地紀錄',urgent:'急辦排序',cat:'貓咪小屋'};
+const TITLES={lessons:'施工經驗庫',buy:'採購清單',check:'開工準備清單',projects:'專案',records:'工地紀錄',todos:'待辦事項',new:'新增工地紀錄',urgent:'急辦排序',cat:'貓咪小屋'};
 const BARE=['login','onboard','loading','offline','setup'];
 function render(){
  const top=document.getElementById('topIn');
  if(BARE.includes(V.name)){top.innerHTML='';document.getElementById('main').innerHTML=({login:vLogin,onboard:vOnboard,loading:vLoading,offline:vOffline,setup:vSetup})[V.name]();document.getElementById('nav').hidden=true;bindView();return}
  if(V.name==='home')top.innerHTML=`<div class="brand">${mark()}<div><b>工地貓</b><small>SITE LOG</small></div></div><button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`;
- else{const form=V.name==='new'||V.name==='pform';const sub=stack.length&&!form||['project','urgent','cat','check','buy'].includes(V.name);
-  top.innerHTML=`${sub||form?`<button class="iconbtn" data-act="back" aria-label="返回" style="margin-left:-10px">${ic('back')}</button>`:''}<h1>${V.name==='project'?esc((proj(V.id)||{}).name||''):V.name==='pform'?(PD&&PD.id?'編輯專案':'新增專案'):V.name==='new'&&D&&D.editId?'編輯紀錄':V.name==='new'&&D&&D.war?'新增保固紀錄':V.name==='new'&&D&&D.category===BUY?'新增採購':TITLES[V.name]}</h1>${form?'':V.name==='project'?`<button class="iconbtn" data-act="pedit" aria-label="編輯專案">${ic('pen')}</button>`:`<button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`}`}
+ else{const form=V.name==='new'||V.name==='pform'||V.name==='lform';const sub=stack.length&&!form||['project','urgent','cat','check','buy','lessons'].includes(V.name);
+  top.innerHTML=`${sub||form?`<button class="iconbtn" data-act="back" aria-label="返回" style="margin-left:-10px">${ic('back')}</button>`:''}<h1>${V.name==='project'?esc((proj(V.id)||{}).name||''):V.name==='pform'?(PD&&PD.id?'編輯專案':'新增專案'):V.name==='lform'?(LD&&LD.id?'編輯經驗':'存成施工經驗'):V.name==='new'&&D&&D.editId?'編輯紀錄':V.name==='new'&&D&&D.war?'新增保固紀錄':V.name==='new'&&D&&D.category===BUY?'新增採購':TITLES[V.name]}</h1>${form?'':V.name==='project'?`<button class="iconbtn" data-act="pedit" aria-label="編輯專案">${ic('pen')}</button>`:`<button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`}`}
  const m=document.getElementById('main');
- m.innerHTML=({home:vHome,projects:vProjects,project:vProject,records:vRecords,todos:vTodos,new:vNew,urgent:vUrgent,cat:vCat,pform:vPForm,check:vCheck,buy:vBuy})[V.name]();
+ m.innerHTML=({home:vHome,projects:vProjects,project:vProject,records:vRecords,todos:vTodos,new:vNew,urgent:vUrgent,cat:vCat,pform:vPForm,check:vCheck,buy:vBuy,lessons:vLessons,lform:vLForm})[V.name]();
  const nav=document.getElementById('nav');
- nav.hidden=(V.name==='new'||V.name==='pform')&&innerWidth<900;
- const cur=V.name==='project'||V.name==='check'?'projects':V.name==='urgent'||V.name==='buy'?'todos':V.name==='cat'?'home':V.name;const ot=openTodos().filter(r=>r.due&&diff(r.due)<=0).length;
+ nav.hidden=(V.name==='new'||V.name==='pform'||V.name==='lform')&&innerWidth<900;
+ const cur=V.name==='project'||V.name==='check'?'projects':V.name==='lessons'?'records':V.name==='urgent'||V.name==='buy'?'todos':V.name==='cat'?'home':V.name;const ot=openTodos().filter(r=>r.due&&diff(r.due)<=0).length;
  nav.innerHTML=`<div class="nav-in">
   <a class="${cur==='home'?'on':''}" data-act="tab" data-v="home">${ic('home')}<small>首頁</small></a>
   <a class="${cur==='projects'?'on':''}" data-act="tab" data-v="projects">${ic('folder')}<small>專案</small></a>
@@ -1496,7 +1669,9 @@ function bindView(){
  if(q)q.addEventListener('input',e=>{ui.q=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}});
  const t=document.getElementById('txt');
  const upSave=()=>{const b=document.querySelector('[data-act=save]');if(b)b.disabled=!canSave()};
- if(t){t.addEventListener('input',e=>{D.text=e.target.value;upSave()});}
+ if(t){t.addEventListener('input',e=>{D.text=e.target.value;upSave();lessonHint()});lessonHint()}
+ document.querySelectorAll('[data-lf]').forEach(el=>el.addEventListener('input',e=>{LD[el.dataset.lf]=e.target.value;const b=document.querySelector('[data-act=lsave]');if(b)b.disabled=!(LD.title.trim()&&LD.fix.trim())||LD.busy}));
+ const lq=document.getElementById('lq');if(lq)lq.addEventListener('input',e=>{ui.lq=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById('lq');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}});
  document.querySelectorAll('[data-it]').forEach(el=>el.addEventListener('input',e=>{const [i,f]=el.dataset.it.split(':');if(D.items[+i])D.items[+i][f]=e.target.value;upSave()}));
  const vi=document.getElementById('venIn');if(vi)vi.addEventListener('input',e=>{D.vendor=e.target.value});
  const di=document.getElementById('dueIn');if(di)di.addEventListener('change',e=>{D.due=e.target.value;D.customDue=true;render()});
@@ -1506,8 +1681,8 @@ function bindView(){
 /* ---------- photos ---------- */
 function shrink(file){return new Promise(res=>{
  const url=URL.createObjectURL(file);const img=new Image();
- img.onload=()=>{const M=1280;let{width:w,height:h}=img;const k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
-  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.72))};
+ img.onload=()=>{const M=1080;let{width:w,height:h}=img;const k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.7))};
  img.onerror=()=>{URL.revokeObjectURL(url);res(null)};img.src=url})}
 async function onPhotos(e){
  const files=[...e.target.files];if(!files.length)return;
@@ -1532,6 +1707,7 @@ function recSheet(id){
   ${isTodo(r)?`<div class="card" style="box-shadow:none;background:var(--surface-2);margin-top:12px;padding:12px 14px"><dl class="kv" style="margin:0"><dt>記錄人</dt><dd>${esc(r.by)}</dd><dt>負責人</dt><dd>${esc(r.assignee)}</dd><dt>${r.category===BUY?'到場日':'期限'}</dt><dd>${r.due?`${md(r.due)} <span class="${r.status==='done'?'':dueCls(r.due)}">${r.status==='done'||rel(r.due)===md(r.due)?'':'· '+rel(r.due)}</span>`:'未設定'}</dd><dt>狀態</dt><dd>${r.status==='done'?'已完成'+(r.doneBy?`（${esc(r.doneBy)}）`:''):'處理中'}</dd></dl></div>`:''}
   <div class="sheet-actions">
    ${isTodo(r)?`<button class="${r.status==='done'?'ghost':'bigbtn'}" style="grid-column:1/-1" data-act="toggle" data-id="${r.id}" data-keep="1">${ic(r.status==='done'?'undo':'check')}${r.status==='done'?'改回未完成':'標記完成'}</button>`:''}
+   ${LS_MISSING?'':`<button class="ghost" style="grid-column:1/-1;color:var(--warn)" data-act="tolsn" data-id="${r.id}">${ic('spark','sm')}存成施工經驗</button>`}
    <button class="ghost" data-act="edit" data-id="${r.id}">${ic('pen','sm')}編輯</button>
    <button class="ghost danger" data-act="delask" data-id="${r.id}">${ic('trash','sm')}刪除</button>
    ${p&&V.name!=='project'?`<button class="ghost" style="grid-column:1/-1" data-act="proj" data-id="${p.id}">查看專案</button>`:''}
@@ -1580,7 +1756,7 @@ document.addEventListener('click',e=>{
   case'pdelask':sheet(`<h3>刪除「${esc(PD.name)}」？</h3><p class="muted" style="margin:6px 0 16px">這個專案的所有紀錄和照片都會一起刪除，無法復原。</p><div class="sheet-actions"><button class="ghost" data-act="close">取消</button><button class="bigbtn" style="background:var(--bad)" data-act="pdel">刪除專案</button></div>`);break;
   case'pdel':deleteProject(PD.id);break;
   case'sync':close();sync(true);break;
-  case'logout':close();API.logout();ME=null;S={projects:[],records:[],profiles:[],contacts:[],cat:null,seen:null};stack.length=0;V={name:'login'};render();break;
+  case'logout':close();API.logout();ME=null;S={projects:[],records:[],profiles:[],contacts:[],checks:[],lessons:[],rewards:[],cat:null,seen:null};stack.length=0;V={name:'login'};render();break;
   case'profedit':OB.erole=ME.role;profSheet();break;
   case'perole':{OB.erole=v;const n=document.getElementById('peName').value;profSheet();document.getElementById('peName').value=n;break}
   case'profsave':{const name=document.getElementById('peName').value.trim();if(!name){toast('名字不能空白');break}
@@ -1610,6 +1786,24 @@ document.addEventListener('click',e=>{
   case'bp':ui.bproj=v;render();break;
   case'bv':ui.bven=v;render();break;
   case'edit':close();if(editDraft(id))go('new');break;
+  case'older':loadOlder();break;
+  case'lessons':close();go('lessons');break;
+  case'lsn':lessonSheet(id);break;
+  case'lnew':close();LD={title:'',what:'',fix:'',phases:[],trades:[],photos:[]};go('lform');break;
+  case'tolsn':{const r=S.records.find(x=>x.id===id);if(!r)break;const p=proj(r.projectId);const t=guessTrade(r.assignee);
+   LD={title:r.text.slice(0,24),what:r.text,fix:'',phases:p&&p.phase!=='完工'?[p.phase]:[],trades:t?[t]:[],photos:r.photos.slice(),source:r.id,projectId:r.projectId};close();go('lform');break}
+  case'ledit':{const l=S.lessons.find(x=>x.id===id);if(!l)break;LD=Object.assign({},l,{phases:l.phases.slice(),trades:l.trades.slice(),photos:l.photos.slice()});close();go('lform');break}
+  case'lph':LD.phases=LD.phases.includes(v)?LD.phases.filter(x=>x!==v):[...LD.phases,v];render();break;
+  case'ltr':LD.trades=LD.trades.includes(v)?LD.trades.filter(x=>x!==v):[...LD.trades,v];render();break;
+  case'lrmph':LD.photos.splice(+v,1);render();break;
+  case'lsave':saveLesson();break;
+  case'lft':ui.ltr=v;render();break;
+  case'lfp':ui.lph=v;render();break;
+  case'lsnph':close();ui.lph=v;ui.ltr='all';ui.lq='';go('lessons');break;
+  case'lagain':{const l=S.lessons.find(x=>x.id===id);if(!l)break;const prev={recur:l.recur,log:l.log};l.recur++;l.log=[...l.log,{at:Date.now(),by:ME?ME.name:''}];lessonSheet(id);render();
+   API.upd('lessons',id,{recur:l.recur,recur_log:l.log}).then(()=>toast(`已記錄，這個問題發生過 ${l.recur} 次`)).catch(e=>{Object.assign(l,prev);lessonSheet(id);toast(errMsg(e))});break}
+  case'ldelask':sheet(`<h3>刪除這則經驗？</h3><p class="muted" style="margin:6px 0 16px">刪除後無法復原，原本的紀錄和照片不受影響。</p><div class="sheet-actions"><button class="ghost" data-act="lsn" data-id="${id}">取消</button><button class="bigbtn" style="background:var(--bad)" data-act="ldel" data-id="${id}">刪除</button></div>`);break;
+  case'ldel':{const before=points().total;API.del('lessons',id).then(()=>{S.lessons=S.lessons.filter(x=>x.id!==id);close();render();award(before,'已刪除經驗')}).catch(e=>toast(errMsg(e)));break}
   case'rwask':{const r=rewards().find(x=>x.id===id);if(!r)break;sheet(`<div class="celebrate"><div class="bigemoji">${esc(r.emoji||'🎁')}</div><h3>確認已兌現「${esc(r.title)}」？</h3><p class="muted" style="margin:0">兌現後會記下日期和兌現人。</p></div><div class="sheet-actions"><button class="ghost" data-act="close">取消</button><button class="bigbtn" data-act="rwok" data-id="${r.id}">已兌現</button></div>`);break}
   case'rwok':case'rwundo':{const list=rewards().map(x=>Object.assign({},x));const r=list.find(x=>x.id===id);if(!r)break;
    if(a==='rwok')Object.assign(r,{redeemed:true,redeemedAt:Date.now(),redeemedBy:ME?ME.name:''});else{delete r.redeemed;delete r.redeemedAt;delete r.redeemedBy}
@@ -1639,7 +1833,7 @@ if(window.visualViewport){const vv=window.visualViewport;const chk=()=>document.
 document.addEventListener('focusin',e=>{if(e.target.matches('textarea,input:not([type=file])'))setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),320)});
 document.addEventListener('focusout',()=>setTimeout(()=>{if(!document.activeElement||!document.activeElement.matches('textarea,input'))document.body.classList.remove('kb')},100));
 window.addEventListener('scroll',()=>document.getElementById('top').classList.toggle('scrolled',scrollY>4),{passive:true});
-window.addEventListener('resize',()=>{const nav=document.getElementById('nav');nav.hidden=BARE.includes(V.name)||(V.name==='new'||V.name==='pform')&&innerWidth<900});
+window.addEventListener('resize',()=>{const nav=document.getElementById('nav');nav.hidden=BARE.includes(V.name)||(V.name==='new'||V.name==='pform'||V.name==='lform')&&innerWidth<900});
 
 setInterval(()=>{if(document.visibilityState==='visible')sync()},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
