@@ -39,7 +39,7 @@
   --accent:#2C5E4F; --accent-ink:#FFFFFF; --accent-soft:#DCE8E2;
   --brand:#C4862A; --brand-soft:#F4E5CB;
   --ok:#2E7A4E; --ok-soft:#DBEEE1; --warn:#A86D12; --warn-soft:#F5E8CF; --bad:#BC3E2A; --bad-soft:#F7DFD9;
-  --mat:#3A6896; --mat-soft:#DDE6F1; --war:#7A4E9A; --war-soft:#EEE4F5;
+  --mat:#3A6896; --mat-soft:#DDE6F1; --war:#7A4E9A; --war-soft:#EEE4F5; --buy:#2F7A78; --buy-soft:#DAEDEC;
   --shadow:0 1px 2px rgba(20,30,25,.06),0 4px 14px rgba(20,30,25,.06);
   --f-body:"Noto Sans TC","PingFang TC","Heiti TC","Microsoft JhengHei",system-ui,sans-serif;
   --f-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -51,14 +51,14 @@
   --accent:#72B59D; --accent-ink:#0E1814; --accent-soft:#1E3830;
   --brand:#E2A64C; --brand-soft:#3A2E1A;
   --ok:#62C08A; --ok-soft:#1B3325; --warn:#E2A64C; --warn-soft:#3A2E1A; --bad:#EC7A65; --bad-soft:#3E231E;
-  --mat:#86AADA; --mat-soft:#1F2C3D; --war:#C7A6E2; --war-soft:#2E2340; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+  --mat:#86AADA; --mat-soft:#1F2C3D; --war:#C7A6E2; --war-soft:#2E2340; --buy:#7CC9C6; --buy-soft:#1C3534; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121614; --surface:#1B201E; --surface-2:#222826; --line:#323A36;
   --ink:#E7ECE9; --ink-2:#A8B1AC; --ink-3:#77817B;
   --accent:#72B59D; --accent-ink:#0E1814; --accent-soft:#1E3830;
   --brand:#E2A64C; --brand-soft:#3A2E1A;
   --ok:#62C08A; --ok-soft:#1B3325; --warn:#E2A64C; --warn-soft:#3A2E1A; --bad:#EC7A65; --bad-soft:#3E231E;
-  --mat:#86AADA; --mat-soft:#1F2C3D; --war:#C7A6E2; --war-soft:#2E2340; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+  --mat:#86AADA; --mat-soft:#1F2C3D; --war:#C7A6E2; --war-soft:#2E2340; --buy:#7CC9C6; --buy-soft:#1C3534; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg)}
@@ -133,6 +133,23 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:8px calc(va
 .c-材料{background:var(--mat-soft);color:var(--mat)}
 .c-安全{background:var(--warn-soft);color:var(--warn)}
 .c-保固{background:var(--war-soft);color:var(--war)}
+.c-採購{background:var(--buy-soft);color:var(--buy)}
+.s-todo{background:var(--brand-soft);color:var(--warn)}
+.s-ordered{background:var(--mat-soft);color:var(--mat)}
+.s-arrived{background:var(--ok-soft);color:var(--ok)}
+.blist{display:flex;flex-direction:column;gap:6px}
+.bitem{display:flex;gap:8px;align-items:flex-start;font-size:14.5px}
+.bitem .bname{flex:1;min-width:0;overflow-wrap:anywhere;padding-top:1px}
+.bitem.done .bname{color:var(--ink-3);text-decoration:line-through}
+.seg{display:flex;gap:4px;background:var(--surface-2);border-radius:10px;padding:3px}
+.seg button{flex:1;min-height:38px;border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.seg button.on{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
+.itcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
+.itcard .full{grid-column:1/-1;padding-right:44px}
+.itcard input.in{padding:10px 12px}
+.itcard .itx{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--ink-3)}
+.itlist{display:flex;flex-direction:column;gap:8px}
+.edited{font-size:11.5px;color:var(--ink-3)}
 .bigbtn.warbtn{background:var(--war);color:#fff}
 
 .bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;flex:1}
@@ -387,8 +404,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 /* ---------- constants ---------- */
 const PHASES=['開工準備','保護工程','拆除','水電','泥作','木作','油漆','系統櫃','清潔','完工'];
 const PH_SHORT={'開工準備':'準備','保護工程':'保護'};
-const CATS=['進度','問題','變更','驗收','材料','安全','保固'];
-const NEWCATS=['進度','問題','變更','驗收','材料','安全'];
+const CATS=['進度','問題','變更','驗收','材料','採購','安全','保固'];
+const NEWCATS=['進度','問題','變更','驗收','材料','採購','安全'];
 const short=p=>p.replace(/（.*）/,'');
 
 /* ---------- 團隊貓咪：點數與解鎖 ---------- */
@@ -613,7 +630,7 @@ const API={
 };
 const fromP=x=>({id:x.id,name:x.name,type:x.type||'',address:x.address||'',client:x.client||'',pm:x.pm||'',phase:x.phase||'拆除',progress:x.progress||0,start:x.start_date||'',end:x.end_date||'',today:x.today||''});
 const toP=p=>({name:p.name.trim(),type:p.type.trim(),address:p.address.trim(),client:p.client.trim(),pm:p.pm,phase:p.phase,progress:+p.progress||0,start_date:p.start||null,end_date:p.end||null,today:p.today.trim(),updated_at:new Date().toISOString()});
-const fromR=x=>({id:x.id,projectId:x.project_id,ts:Date.parse(x.ts),category:x.category,text:x.text||'',photos:x.photos||[],assignee:x.assignee||'',due:x.due||'',urgent:!!x.urgent,status:x.status,doneAt:x.done_at?Date.parse(x.done_at):null,doneBy:x.done_by||'',by:x.by_name||''});
+const fromR=x=>({id:x.id,projectId:x.project_id,ts:Date.parse(x.ts),category:x.category,text:x.text||'',photos:x.photos||[],assignee:x.assignee||'',due:x.due||'',urgent:!!x.urgent,status:x.status,doneAt:x.done_at?Date.parse(x.done_at):null,doneBy:x.done_by||'',by:x.by_name||'',items:Array.isArray(x.items)?x.items:[],vendor:x.vendor||'',editedAt:x.edited_at?Date.parse(x.edited_at):null,editedBy:x.edited_by||''});
 let S={projects:[],records:[],profiles:[],contacts:[],checks:[],cat:null,seen:null};
 let ME=null;
 let PEOPLE=[];
@@ -622,12 +639,13 @@ const ctLabel=c=>c.trade?`${c.name}（${c.trade}）`:c.name;
 function rebuildPeople(){PEOPLE=['全員',...MEMBERS(),...S.contacts.map(ctLabel),'業主'].filter((v,i,a)=>v&&a.indexOf(v)===i)}
 async function loadAll(){
  const clP=API.sel('checklist_items','select=*&order=sort').then(r=>{CL_MISSING=false;return r}).catch(e=>{if(isAuthErr(e))throw e;CL_MISSING=e.status===404||e.status===400;return []});
+ const v5P=API.sel('records','select=items,vendor,edited_at&limit=1').then(()=>{V5_MISSING=false}).catch(e=>{if(isAuthErr(e))throw e;V5_MISSING=e.status===400||e.status===404});
  const [pr,rc,tm,pf,ct,cl]=await Promise.all([
   API.sel('projects','select=*&order=created_at.desc'),
   API.sel('records','select=*&order=ts.desc&limit=3000'),
   API.sel('team','select=*&id=eq.1'),
   API.sel('profiles','select=*&order=created_at'),
-  API.sel('contacts','select=*&order=created_at'),clP]);
+  API.sel('contacts','select=*&order=created_at'),clP,v5P]);
  const t=tm&&tm[0]||{};
  S={projects:pr.map(fromP),records:rc.map(fromR),profiles:pf,contacts:ct,checks:cl.map(fromC),
     cat:t.cat&&Object.keys(t.cat).length?Object.assign({},LOOK0,t.cat):null,
@@ -644,6 +662,7 @@ function errMsg(e){
  if(isAuthErr(e))return '登入已過期，請重新登入';
  if(e&&e.status===403)return '沒有權限做這個動作';
  if(e&&e.status===413)return '照片太大，請少選幾張';
+ if(e&&e.status===400&&/column|schema/i.test(e.message||''))return '資料庫需要更新：請在 Supabase 執行最新的 schema.sql';
  return '儲存失敗，請再試一次';
 }
 /* photos: signed URLs, cached for the session */
@@ -758,6 +777,121 @@ async function clToggle(id){
  catch(e){Object.assign(x,prev);render();toast(errMsg(e))}
 }
 
+/* ---------- 採購 ---------- */
+const BUY='採購';
+const IST={todo:'待採購',ordered:'已下訂',arrived:'已到貨'};
+const INEXT={todo:'ordered',ordered:'arrived'};
+const INEXT_L={todo:'標記下訂',ordered:'標記到貨'};
+const UNITS=['箱','支','片','組','個','坪','才','卷','包','桶','式','米'];
+let V5_MISSING=false;
+const newItem=()=>({id:uuid().slice(0,8),name:'',spec:'',qty:'',unit:'',status:'todo',by:'',at:null});
+const isBuy=r=>r.category===BUY&&r.items&&r.items.length>0;
+const itemLine=it=>[it.name,it.spec,it.qty?`×${it.qty}${it.unit||''}`:''].filter(Boolean).join(' ');
+function buySummary(r){const n=r.items.map(i=>i.name).filter(Boolean);return n.length?n.slice(0,3).join('、')+(n.length>3?` 等 ${n.length} 項`:''):''}
+const recTitle=r=>r.text||(r.items&&r.items.length?buySummary(r):'')||'（照片紀錄）';
+const vendors=()=>[...new Set(S.records.map(r=>r.vendor).filter(Boolean))];
+const catList=base=>base.filter(c=>c!==BUY||!V5_MISSING);
+function buyFlag(r,it){
+ if(!r.due||it.status==='arrived')return '';
+ const n=diff(r.due);
+ if(it.status==='todo'&&n<=3)return n<0?`<span class="due-over">逾期 ${-n} 天，還沒下訂</span>`:`<span class="due-today">${n===0?'今天':n+' 天後'}要到，還沒下訂</span>`;
+ if(it.status==='ordered'&&n<0)return `<span class="due-over">逾期 ${-n} 天未到貨</span>`;
+ return '';
+}
+function buyList(r,interactive){
+ return `<div class="blist">${r.items.map(it=>`<div class="bitem ${it.status==='arrived'?'done':''}">
+   <span class="pill s-${it.status}">${IST[it.status]}</span><span class="bname">${esc(itemLine(it))}</span></div>
+   ${interactive?`<div class="seg">${['todo','ordered','arrived'].map(s=>`<button class="${it.status===s?'on':''}" data-act="ist" data-id="${r.id}" data-v="${it.id}" data-s="${s}" data-keep="1">${IST[s]}</button>`).join('')}</div>${it.by&&it.status!=='todo'?`<div class="edited" style="margin:-2px 0 4px">${esc(it.by)} 標記${IST[it.status]}${it.at?' · '+md(iso(it.at)):''}</div>`:''}`:''}`).join('')}
+  ${r.vendor?`<div class="meta">${ic('folder','sm')}<span>廠商：${esc(r.vendor)}</span></div>`:''}</div>`}
+function buyRows(list,showProj){
+ if(!list.length)return '';
+ return `<div class="card">${list.map(({r,it})=>{const p=proj(r.projectId);const f=buyFlag(r,it);
+  return `<div class="todo ${it.status==='arrived'?'done':''}">
+   <div class="b" data-act="rec" data-id="${r.id}"><p>${esc(itemLine(it))}</p>
+    <div class="meta">${showProj&&p?`<span>${esc(p.name)}</span>`:''}${r.vendor?`<span>${esc(r.vendor)}</span>`:''}${r.due?`<span>到場 ${md(r.due)}</span>`:''}${f}</div></div>
+   ${INEXT[it.status]?`<button class="quick" data-act="ist" data-id="${r.id}" data-v="${it.id}" data-s="${INEXT[it.status]}">${INEXT_L[it.status]}</button>`:`<span class="pill s-arrived">已到貨</span>`}
+  </div>`}).join('')}</div>`}
+function buyItems(pid){
+ const out=[];S.records.forEach(r=>{if(r.category!==BUY||(pid&&r.projectId!==pid))return;(r.items||[]).forEach(it=>out.push({r,it}))});
+ return out.sort((a,b)=>(a.r.due||'9999').localeCompare(b.r.due||'9999'));
+}
+function buySections(list,showProj){
+ const g=s=>list.filter(x=>x.it.status===s);
+ const arrived=g('arrived').sort((a,b)=>(b.it.at||0)-(a.it.at||0)).slice(0,15);
+ return [['todo','待採購'],['ordered','已下訂']].map(([s,l])=>g(s).length?`<div class="day">${l}<span class="num">${g(s).length}</span></div>${buyRows(g(s),showProj)}`:'').join('')
+  +(arrived.length?`<div class="day">最近到貨</div>${buyRows(arrived,showProj)}`:'')}
+function vBuy(){
+ if(V5_MISSING)return empty('採購清單尚未啟用','請在 Supabase 執行最新的 schema.sql。');
+ let list=buyItems();
+ const vs=vendors();
+ if(ui.bproj&&ui.bproj!=='all')list=list.filter(x=>x.r.projectId===ui.bproj);
+ if(ui.bven&&ui.bven!=='all')list=list.filter(x=>x.r.vendor===ui.bven);
+ const c=s=>list.filter(x=>x.it.status===s).length;
+ const pids=[...new Set(buyItems().map(x=>x.r.projectId))];
+ return `<button class="bigbtn" data-act="newbuy" data-id="${ui.bproj&&ui.bproj!=='all'?ui.bproj:''}" style="margin-top:6px">${ic('plus')}新增採購</button>
+  <div class="stats" style="margin-top:12px"><div class="stat"><span class="n">${c('todo')}</span><span class="l">待採購</span></div><div class="stat"><span class="n">${c('ordered')}</span><span class="l">已下訂</span></div><div class="stat"><span class="n">${c('arrived')}</span><span class="l">已到貨</span></div></div>
+  ${pids.length>1?`<div class="chips" style="margin-top:12px"><button class="chip ${!ui.bproj||ui.bproj==='all'?'on':''}" data-act="bp" data-v="all">所有專案</button>${pids.map(id=>proj(id)).filter(Boolean).map(p=>`<button class="chip ${ui.bproj===p.id?'on':''}" data-act="bp" data-v="${p.id}">${esc(p.name)}</button>`).join('')}</div>`:''}
+  ${vs.length?`<div class="chips"><button class="chip ${!ui.bven||ui.bven==='all'?'on':''}" data-act="bv" data-v="all">所有廠商</button>${vs.map(v=>`<button class="chip ${ui.bven===v?'on':''}" data-act="bv" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`:''}
+  ${buySections(list,true)||empty('還沒有採購項目','按上方「新增採購」，列出要買的材料、數量和需要到場日。')}`}
+function initBuy(){
+ if(!D.items||!D.items.length)D.items=[newItem()];
+ if(!D.editId&&!D.assignee){D.assignee=firstPm(proj(D.projectId));if(!D.due)D.due=addD(7)}
+}
+async function setItemStatus(rid,iid,st,keep){
+ const r=S.records.find(x=>x.id===rid);if(!r)return;const it=(r.items||[]).find(x=>x.id===iid);if(!it||it.status===st)return;
+ const snap=JSON.stringify({items:r.items,status:r.status,doneAt:r.doneAt,doneBy:r.doneBy});const before=points().total;
+ it.status=st;it.by=ME?ME.name:'';it.at=Date.now();
+ const all=r.items.every(x=>x.status==='arrived');
+ if(all&&r.status!=='done'){r.status='done';r.doneAt=Date.now();r.doneBy=ME?ME.name:''}
+ else if(!all&&r.status==='done'){r.status='open';r.doneAt=null;r.doneBy=''}
+ render();
+ const shown=award(before,all?'全部到貨了！':`${it.name||'品項'} ${IST[st]}`);
+ if(!shown&&keep)recSheet(rid);
+ try{await API.upd('records',rid,{items:r.items,status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null,done_by:r.doneBy||null})}
+ catch(e){Object.assign(r,JSON.parse(snap));render();toast(errMsg(e))}
+}
+/* ---------- 編輯紀錄 ---------- */
+function editDraft(id){
+ const r=S.records.find(x=>x.id===id);if(!r)return false;
+ D={editId:id,orig:r,projectId:r.projectId,text:r.text,category:r.category,photos:r.photos.slice(),assignee:r.assignee,due:r.due,urgent:r.urgent,customDue:false,by:r.by,
+    items:JSON.parse(JSON.stringify(r.items||[])),vendor:r.vendor||''};
+ if(D.category===BUY&&!D.items.length)D.items=[newItem()];
+ return true;
+}
+const canSave=()=>D&&D.projectId&&(D.text.trim()||D.photos.length||(D.category===BUY&&(D.items||[]).some(i=>i.name.trim())));
+function cleanItems(){return (D.items||[]).filter(i=>i.name.trim()).map(i=>Object.assign({},i,{name:i.name.trim(),spec:i.spec.trim(),qty:String(i.qty).trim(),unit:i.unit.trim()}))}
+async function uploadNew(recId){
+ const out=[],added=[];const news=D.photos.filter(s=>s.startsWith('data:')).length;let k=0;
+ for(const s of D.photos){
+  if(!s.startsWith('data:')){out.push(s);continue}
+  k++;if(news>1)toast(`上傳照片 ${k}/${news}…`);
+  const path=`${D.projectId}/${recId}/${Date.now().toString(36)}-${k}.jpg`;
+  await API.upload(path,await (await fetch(s)).blob());PHC[path]=s;out.push(path);added.push(path);
+ }
+ return {paths:out,added};
+}
+async function saveEdit(){
+ if(!canSave()||D.saving)return;
+ D.saving=true;render();
+ const r=D.orig;let added=[];
+ try{
+  const up=await uploadNew(r.id);added=up.added;
+  const buy=D.category===BUY;const items=buy?cleanItems():[];
+  const patch={project_id:D.projectId,category:D.category,text:D.text.trim(),photos:up.paths,assignee:D.assignee,due:D.assignee&&D.due?D.due:null,urgent:!!(D.assignee&&D.urgent)};
+  if(!V5_MISSING){Object.assign(patch,{items,vendor:buy?(D.vendor||'').trim():'',edited_at:new Date().toISOString(),edited_by:ME?ME.name:''})}
+  if(buy&&items.length){const all=items.every(i=>i.status==='arrived');
+   if(all&&r.status!=='done')Object.assign(patch,{status:'done',done_at:new Date().toISOString(),done_by:ME?ME.name:null});
+   else if(!all&&r.status==='done')Object.assign(patch,{status:'open',done_at:null,done_by:null})}
+  const row=await API.upd('records',r.id,patch);
+  if(!row)throw Object.assign(new Error('no row'),{status:403});
+  const before=points().total;
+  const i=S.records.findIndex(x=>x.id===r.id);S.records[i]=fromR(row);
+  const removed=r.photos.filter(p=>!up.paths.includes(p));
+  if(removed.length)API.rmPhotos(removed).catch(()=>{});
+  D=null;back();award(before,'已更新紀錄');
+ }catch(e){D.saving=false;render();toast(errMsg(e));if(added.length)API.rmPhotos(added).catch(()=>{})}
+}
+
 const pmSet=()=>(PD.pm||'').split('、').filter(Boolean);
 function pDraft(p){PD=p?Object.assign({},p):{name:'',type:'',address:'',client:'',pm:ME?ME.name:'',phase:PREP,progress:0,start:addD(14),end:addD(74),today:''}}
 function vPForm(){
@@ -791,7 +925,7 @@ async function saveProject(){
  }catch(e){PD.busy=false;render();toast(errMsg(e))}
 }
 async function saveRecord(){
- if(!D||D.saving||!D.projectId||!(D.text.trim()||D.photos.length))return;
+ if(!canSave()||D.saving)return;
  D.saving=true;render();
  const id=uuid(),paths=[];
  try{
@@ -801,20 +935,21 @@ async function saveRecord(){
    const path=`${D.projectId}/${id}/${i+1}.jpg`;
    await API.upload(path,blob);PHC[path]=D.photos[i];paths.push(path);
   }
-  const row=await API.ins('records',{id,project_id:D.projectId,category:D.category,text:D.text.trim(),photos:paths,assignee:D.assignee,due:D.assignee&&D.due?D.due:null,urgent:!!D.urgent,status:'open',by_name:D.by||(ME&&ME.name)||''});
+  const row=await API.ins('records',{id,project_id:D.projectId,category:D.category,text:D.text.trim(),photos:paths,assignee:D.assignee,due:D.assignee&&D.due?D.due:null,urgent:!!D.urgent,status:'open',by_name:D.by||(ME&&ME.name)||'',...(D.category===BUY&&!V5_MISSING?{items:cleanItems(),vendor:(D.vendor||'').trim()}:{})});
   const r=fromR(row);const before=points().total;S.records.unshift(r);
   try{localStorage.setItem('gdm.lastProj',D.projectId)}catch(_){}
   const pid=D.projectId;D=null;stack.length=0;stack.push({name:'home'});ui.ptab='rec';V={name:'project',id:pid};render();window.scrollTo(0,0);
-  award(before,r.assignee?`已儲存，並指派給${short(r.assignee)}`:'已儲存紀錄');
+  award(before,r.category===BUY&&r.items.length?`已新增 ${r.items.length} 項採購`:r.assignee?`已儲存，並指派給${short(r.assignee)}`:'已儲存紀錄');
  }catch(e){D.saving=false;render();toast(errMsg(e));if(paths.length)API.rmPhotos(paths).catch(()=>{})}
 }
 async function toggleRecord(id,keep){
  const r=S.records.find(x=>x.id===id);if(!r)return;
  const prev={status:r.status,doneAt:r.doneAt},before=points().total;
- const prevBy=r.doneBy;r.status=r.status==='done'?'open':'done';r.doneAt=r.status==='done'?Date.now():null;r.doneBy=r.status==='done'&&ME?ME.name:'';prev.doneBy=prevBy;
+ const prevBy=r.doneBy;prev.items=JSON.parse(JSON.stringify(r.items||[]));r.status=r.status==='done'?'open':'done';r.doneAt=r.status==='done'?Date.now():null;r.doneBy=r.status==='done'&&ME?ME.name:'';prev.doneBy=prevBy;
+ if(isBuy(r)){r.items.forEach(it=>{if(r.status==='done'&&it.status!=='arrived'){it.status='arrived';it.by=r.doneBy;it.at=Date.now()}else if(r.status==='open'&&it.status==='arrived'){it.status='ordered'}})}
  render();const shown=award(before,r.status==='done'?`${r.assignee==='全員'?(ME?ME.name:'有人'):short(r.assignee)} 完成了`:'已改回未完成');
  if(!shown&&keep)recSheet(id);
- const patch={status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null,done_by:r.doneBy||null};
+ const patch={status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null,done_by:r.doneBy||null};if(isBuy(r))patch.items=r.items;
  try{await API.upd('records',r.id,patch).catch(e=>{if(e.status===400&&/done_by/.test(e.message)){delete patch.done_by;return API.upd('records',r.id,patch)}throw e})}
  catch(e){Object.assign(r,prev);render();toast(errMsg(e))}
 }
@@ -882,6 +1017,7 @@ function urg(r){
  if(r.category==='問題'){s+=12;why.push('施工問題')}
  if(r.category==='變更'){s+=6;why.push('業主變更')}
  if(r.category==='保固'){s+=10;why.push('保固維修')}
+ if(isBuy(r)&&r.due){const n=diff(r.due);if(n<=3&&r.items.some(i=>i.status==='todo')){s+=14;why.push('還沒下訂')}else if(n<0&&r.items.some(i=>i.status==='ordered')){s+=10;why.push('逾期未到貨')}}
  if(p.end&&p.phase!=='完工'&&diff(p.end)<=14&&diff(p.end)>=0){s+=8;why.push(`${diff(p.end)} 天後完工`)}
  if(p.today)s+=5;
  return {s,why}}
@@ -915,14 +1051,15 @@ function todoRow(r,showProj=true){
  const p=proj(r.projectId);
  return `<div class="todo ${r.status==='done'?'done':''}">
   <button class="chk ${r.status==='done'?'on':''}" data-act="toggle" data-id="${r.id}" aria-label="${r.status==='done'?'標記未完成':'標記完成'}">${ic('check','sm')}</button>
-  <div class="b" data-act="rec" data-id="${r.id}"><p>${r.urgent&&r.status!=='done'?'<span class="pill c-問題" style="height:20px;margin-right:6px">急</span>':''}${esc(r.text)}</p>
+  <div class="b" data-act="rec" data-id="${r.id}"><p>${r.urgent&&r.status!=='done'?'<span class="pill c-問題" style="height:20px;margin-right:6px">急</span>':''}${r.category===BUY?'<span class="pill c-採購" style="height:20px;margin-right:6px">採購</span>':''}${esc(recTitle(r))}</p>
   <div class="meta">${showProj&&p?`<span>${esc(p.name)}</span>`:''}<span>${esc(short(r.assignee))}</span>${r.due?`<span class="${r.status==='done'?'':dueCls(r.due)}">${rel(r.due)}</span>`:''}</div></div>
  </div>`}
 function recCard(r,showProj=true){
  const p=proj(r.projectId);
  return `<div class="card rec" data-act="rec" data-id="${r.id}">
-  <div class="rec-h"><span class="pill c-${r.category}">${r.category}</span><span class="grow">${showProj&&p?esc(p.name)+' · ':''}${esc(short(r.by))} 記錄</span><span class="num">${hm(r.ts)}</span></div>
+  <div class="rec-h"><span class="pill c-${r.category}">${r.category}</span><span class="grow">${showProj&&p?esc(p.name)+' · ':''}${esc(short(r.by))} 記錄${r.editedAt?' · 已編輯':''}</span><span class="num">${hm(r.ts)}</span></div>
   ${r.text?`<p>${esc(r.text)}</p>`:''}
+  ${r.category===BUY&&r.items.length?buyList(r,false):''}
   ${r.photos.length?`<div class="thumbs">${r.photos.map(src=>phImg(src)).join('')}</div>`:''}
   ${isTodo(r)?`<div class="meta">${ic('user','sm')}<span>負責：${esc(short(r.assignee))}</span>${r.due?`<span class="${r.status==='done'?'':dueCls(r.due)}">${r.status==='done'?'已完成':rel(r.due)}</span>`:''}</div>`:''}
  </div>`}
@@ -936,7 +1073,7 @@ function urgRow(x,i,extra){
  const r=x.r,p=proj(r.projectId);
  return `<div class="todo urow">
   <span class="rank num ${x.s>=40?'hot':''}">${i+1}</span>
-  <div class="b" data-act="rec" data-id="${r.id}"><p>${esc(r.text||'（照片紀錄）')}</p>
+  <div class="b" data-act="rec" data-id="${r.id}"><p>${esc(recTitle(r))}</p>
    <div class="meta">${p?`<span>${esc(p.name)}</span>`:''}<span>${ic('user','sm')}${esc(short(r.assignee))}</span>${r.due?`<span class="${dueCls(r.due)}">${rel(r.due)}</span>`:''}</div>
    ${extra?`<div class="ai-why">${extra}</div>`:`<div class="why">${x.why.map(w=>`<span>${w}</span>`).join('')}</div>`}</div>
   <button class="chk" data-act="toggle" data-id="${r.id}" aria-label="標記完成">${ic('check','sm')}</button>
@@ -1055,8 +1192,9 @@ function vProject(){
   <div class="tabs">
    <button class="${ui.ptab==='rec'?'on':''}" data-act="ptab" data-v="rec">紀錄 ${recs.length}</button>
    <button class="${ui.ptab==='todo'?'on':''}" data-act="ptab" data-v="todo">待辦 ${todos.filter(r=>r.status==='open').length}</button>
+   ${V5_MISSING?'':`<button class="${ui.ptab==='buy'?'on':''}" data-act="ptab" data-v="buy">採購 ${buyItems(p.id).filter(x=>x.it.status!=='arrived').length}</button>`}
   </div>
-  ${ui.ptab==='rec'?recGroups(recs,false):`<div class="card" style="margin-top:10px">${todos.map(r=>todoRow(r,false)).join('')||`<div class="todo"><div class="b muted">這個專案沒有待辦</div></div>`}</div>`}`}
+  ${ui.ptab==='buy'&&!V5_MISSING?`<button class="ghost" data-act="newbuy" data-id="${p.id}" style="margin-top:10px">${ic('plus','sm')}新增採購</button>${buySections(buyItems(p.id),false)||empty('這個專案還沒有採購','列出要買的材料、數量和需要到場日，到貨前都會追蹤。')}`:ui.ptab==='rec'?recGroups(recs,false):`<div class="card" style="margin-top:10px">${todos.map(r=>todoRow(r,false)).join('')||`<div class="todo"><div class="b muted">這個專案沒有待辦</div></div>`}</div>`}`}
 
 function vRecords(){
  let list=S.records;
@@ -1072,7 +1210,7 @@ function vTodos(){
  const open=list.filter(r=>r.status==='open').sort(byDue);
  const grp=[['逾期',r=>r.due&&diff(r.due)<0],['今天',r=>r.due&&diff(r.due)===0],['明天',r=>r.due&&diff(r.due)===1],['本週',r=>r.due&&diff(r.due)>1&&diff(r.due)<7],['之後',r=>!r.due||diff(r.due)>=7]];
  const done=list.filter(r=>r.status==='done').sort((a,b)=>(b.doneAt||b.ts)-(a.doneAt||a.ts)).slice(0,8);
- let html=`<div class="tabs" style="margin-top:6px"><button class="${ui.tscope==='all'?'on':''}" data-act="ts" data-v="all">全部</button><button class="${ui.tscope==='me'?'on':''}" data-act="ts" data-v="me">指派給我</button></div><button class="linkrow" data-act="urgent">${ic('spark')}<span>急辦排序${aiOn()?'與 AI 總結':''}</span>${ic('chev','sm')}</button>`;
+ let html=`<div class="tabs" style="margin-top:6px"><button class="${ui.tscope==='all'?'on':''}" data-act="ts" data-v="all">全部</button><button class="${ui.tscope==='me'?'on':''}" data-act="ts" data-v="me">指派給我</button></div><button class="linkrow" data-act="urgent">${ic('spark')}<span>急辦排序${aiOn()?'與 AI 總結':''}</span>${ic('chev','sm')}</button>${V5_MISSING?'':`<button class="linkrow" data-act="buy" style="color:var(--buy)">${ic('folder')}<span>採購清單<small style="display:block;font-weight:400;color:var(--ink-3);font-size:12.5px">${(()=>{const b=buyItems();const t=b.filter(x=>x.it.status==='todo').length,o=b.filter(x=>x.it.status==='ordered').length;return t||o?`待採購 ${t} · 已下訂 ${o}`:'目前沒有待處理的採購'})()}</small></span>${ic('chev','sm')}</button>`}`;
  let any=false;
  grp.forEach(([lab,f])=>{const g=open.filter(f);if(!g.length)return;any=true;
   html+=`<div class="day" ${lab==='逾期'?'style="color:var(--bad)"':''}>${lab}<span class="num">${g.length}</span></div><div class="card">${g.map(r=>todoRow(r)).join('')}</div>`});
@@ -1087,58 +1225,68 @@ function newDraft(pid,war){
  const ap=activeProjects();
  const p=pid||(ap.find(x=>x.id===last)?last:(ap.find(x=>x.today)||ap[0]||{}).id);
  const by=ME?ME.name:'';
- D={war:!!war,projectId:war?pid:p,text:'',category:war?'保固':'進度',photos:[],assignee:'',due:'',urgent:false,customDue:false,by};
+ D={war:!!war,projectId:war?pid:p,text:'',category:war?'保固':'進度',photos:[],assignee:'',due:'',urgent:false,customDue:false,by,items:[],vendor:''};
 }
 function dueOpts(){
  const fri=(5-TODAY.getDay()+7)%7||7;const mon=(1-TODAY.getDay()+7)%7||7;
  return [['今天',addD(0)],['明天',addD(1)],[fri<=1?'下週五':'本週五',addD(fri)],['下週一',addD(mon)]].filter((x,i,a)=>a.findIndex(y=>y[1]===x[1])===i)}
 function vNew(){
- const ap=D.war?[proj(D.projectId)].filter(Boolean):activeProjects();
+ const ap=D.editId?S.projects.filter(p=>p.phase!=='完工'||p.id===D.projectId):D.war?[proj(D.projectId)].filter(Boolean):activeProjects();
  if(!ap.length)return `${empty('還沒有進行中的專案','先建立專案，才能新增工地紀錄。')}<button class="bigbtn" data-act="pnew">${ic('plus')}新增專案</button>`;
- const ok=D.projectId&&(D.text.trim()||D.photos.length);
+ const ok=canSave();const buy=D.category===BUY;
  const dues=dueOpts();const isPreset=dues.some(d=>d[1]===D.due);
  return `<div class="f">
   <div><label class="h">專案</label>
-   <div class="proj-sel">${ap.map(p=>`<button class="${D.projectId===p.id?'on':''}" data-act="dp" data-v="${p.id}"><b>${esc(p.name)}</b><span>${D.war?'已完工 · 保固':pStatus(p)==='soon'?'即將開工':p.phase}</span></button>`).join('')}</div></div>
+   <div class="proj-sel">${ap.map(p=>`<button class="${D.projectId===p.id?'on':''}" data-act="dp" data-v="${p.id}"><b>${esc(p.name)}</b><span>${pStatus(p)==='done'?'已完工 · 保固':pStatus(p)==='soon'?'即將開工':p.phase}</span></button>`).join('')}</div></div>
   <div><label class="h">照片 <em>${D.photos.length?D.photos.length+' 張':'可多選'}</em></label>
    <div class="photo-row">
     <label class="pbtn cam">${ic('cam')}拍照<input id="camIn" type="file" accept="image/*" capture="environment"></label>
     <label class="pbtn">${ic('img')}從相簿選<input id="libIn" type="file" accept="image/*" multiple></label>
    </div>
-   ${D.photos.length?`<div class="pgrid">${D.photos.map((s,i)=>`<div><img src="${s}" alt="照片 ${i+1}"><button data-act="rmph" data-v="${i}" aria-label="移除照片">${ic('x','sm')}</button></div>`).join('')}</div>`:''}
+   ${D.photos.length?`<div class="pgrid">${D.photos.map((s,i)=>`<div>${s.startsWith('data:')?`<img src="${s}" alt="照片 ${i+1}">`:phImg(s)}<button data-act="rmph" data-v="${i}" aria-label="移除照片">${ic('x','sm')}</button></div>`).join('')}</div>`:''}
   </div>
-  <div><label class="h" for="txt">一句話說明</label>
-   <textarea class="in" id="txt" placeholder="${D.war?'例如：業主反映主臥衣櫃門片下垂，需調整鉸鍊':'例如：主臥天花管線高度不夠，封板前要降 3cm'}" enterkeyhint="done">${esc(D.text)}</textarea></div>
+  <div><label class="h" for="txt">${buy?'說明 <em>選填</em>':'一句話說明'}</label>
+   <textarea class="in" id="txt" placeholder="${buy?'例如：主浴磁磚與收邊條，週五前要到工地':D.war?'例如：業主反映主臥衣櫃門片下垂，需調整鉸鍊':'例如：主臥天花管線高度不夠，封板前要降 3cm'}" enterkeyhint="done">${esc(D.text)}</textarea></div>
   <div><label class="h">分類</label>
-   <div class="wrapchips">${(D.war?['保固','問題','驗收']:NEWCATS).map(c=>`<button class="opt cat ${D.category===c?'on c-'+c:''}" data-act="dc" data-v="${c}">${c}</button>`).join('')}</div></div>
+   <div class="wrapchips">${catList(D.editId?CATS:D.war?['保固','問題','驗收']:NEWCATS).map(c=>`<button class="opt cat ${D.category===c?'on c-'+c:''}" data-act="dc" data-v="${c}">${c}</button>`).join('')}</div></div>
+  ${buy?`<div><label class="h">採購品項 <em>${cleanItems().length} 項</em></label>
+   <div class="itlist">${D.items.map((it,i)=>`<div class="itcard">
+     <input class="in full" data-it="${i}:name" value="${esc(it.name)}" placeholder="品名，例如：磁磚 60×60">
+     <input class="in" data-it="${i}:spec" value="${esc(it.spec)}" placeholder="規格／顏色">
+     <div class="two" style="gap:8px"><input class="in" data-it="${i}:qty" value="${esc(it.qty)}" placeholder="數量" inputmode="decimal"><input class="in" data-it="${i}:unit" value="${esc(it.unit)}" placeholder="單位" list="unitList"></div>
+     ${it.status!=='todo'?`<span class="pill s-${it.status}" style="grid-column:1/-1;justify-self:start">${IST[it.status]}</span>`:''}
+     <button class="itx" data-act="itdel" data-v="${i}" aria-label="移除這一項">${ic('x','sm')}</button></div>`).join('')}
+    <button class="ghost" data-act="itadd">${ic('plus','sm')}再加一項</button></div>
+   <datalist id="unitList">${UNITS.map(u=>`<option value="${u}">`).join('')}</datalist></div>
+  <div><label class="h" for="venIn">廠商 <em>選填</em></label><input class="in" id="venIn" value="${esc(D.vendor)}" placeholder="例如：冠軍磁磚" list="venList"><datalist id="venList">${vendors().map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>`:''}
   <div class="people">
-   <div><label class="h">記錄人</label>
-    <div class="wrapchips">${MEMBERS().map(n=>`<button class="opt ${D.by===n?'on':''}" data-act="dby" data-v="${esc(n)}">${esc(short(n))}</button>`).join('')}</div></div>
+   ${D.editId?`<div><label class="h">記錄人</label><p class="muted" style="margin:0 2px;font-size:14px">${esc(D.by)} · ${md(iso(D.orig.ts))} ${hm(D.orig.ts)} 記錄（不可修改）</p></div>`:`<div><label class="h">記錄人</label>
+    <div class="wrapchips">${MEMBERS().map(n=>`<button class="opt ${D.by===n?'on':''}" data-act="dby" data-v="${esc(n)}">${esc(short(n))}</button>`).join('')}</div></div>`}
   <div><label class="h">負責人 <em>指定後會列入待辦</em></label>
    <div class="wrapchips"><button class="opt ${!D.assignee?'on':''}" data-act="da" data-v="">不需追蹤</button>${PEOPLE.map(n=>`<button class="opt ${D.assignee===n?'on':''}" data-act="da" data-v="${esc(n)}">${esc(short(n))}</button>`).join('')}</div></div>
-  ${D.assignee?`<div><label class="h">期限 ${D.due?`<em>${md(D.due)}</em>`:''}</label>
+  ${D.assignee?`<div><label class="h">${buy?'需要到場日':'期限'} ${D.due?`<em>${md(D.due)}</em>`:''}</label>
    <div class="wrapchips">${dues.map(([l,v])=>`<button class="opt ${D.due===v?'on':''}" data-act="dd" data-v="${v}">${l}</button>`).join('')}<button class="opt ${D.customDue||(D.due&&!isPreset)?'on':''}" data-act="ddc">${ic('cal','sm')}選日期</button></div>
-   ${D.customDue||(D.due&&!isPreset)?`<input class="in" id="dueIn" type="date" min="${addD(0)}" value="${D.due}" style="margin-top:8px">`:''}</div>
+   ${D.customDue||(D.due&&!isPreset)?`<input class="in" id="dueIn" type="date" ${D.editId?'':`min="${addD(0)}"`} value="${D.due}" style="margin-top:8px">`:''}</div>
   <button class="switch" data-act="du" style="margin-top:12px"><span><b style="font-size:15px">標記為緊急</b><br><span style="font-size:12.5px;color:var(--ink-3)">會在首頁與待辦最上方提醒</span></span><span class="tg ${D.urgent?'on':''}"></span></button>`:''}
   </div>
   <div style="height:8px"></div>
  </div>
- <div class="savebar"><div class="savebar-in"><button class="ghost" data-act="back">取消</button><button class="bigbtn" data-act="save" ${ok&&!D.saving?'':'disabled'}>${D.saving?'儲存中…':ic('check')+'儲存紀錄'}</button></div></div>`}
+ <div class="savebar"><div class="savebar-in"><button class="ghost" data-act="back">取消</button><button class="bigbtn" data-act="save" ${ok&&!D.saving?'':'disabled'}>${D.saving?'儲存中…':ic('check')+(D.editId?'儲存修改':'儲存紀錄')}</button></div></div>`}
 
 /* ---------- render ---------- */
-const TITLES={check:'開工準備清單',projects:'專案',records:'工地紀錄',todos:'待辦事項',new:'新增工地紀錄',urgent:'急辦排序',cat:'貓咪小屋'};
+const TITLES={buy:'採購清單',check:'開工準備清單',projects:'專案',records:'工地紀錄',todos:'待辦事項',new:'新增工地紀錄',urgent:'急辦排序',cat:'貓咪小屋'};
 const BARE=['login','onboard','loading','offline','setup'];
 function render(){
  const top=document.getElementById('topIn');
  if(BARE.includes(V.name)){top.innerHTML='';document.getElementById('main').innerHTML=({login:vLogin,onboard:vOnboard,loading:vLoading,offline:vOffline,setup:vSetup})[V.name]();document.getElementById('nav').hidden=true;bindView();return}
  if(V.name==='home')top.innerHTML=`<div class="brand">${mark()}<div><b>工地貓</b><small>SITE LOG</small></div></div><button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`;
- else{const form=V.name==='new'||V.name==='pform';const sub=stack.length&&!form||['project','urgent','cat','check'].includes(V.name);
-  top.innerHTML=`${sub||form?`<button class="iconbtn" data-act="back" aria-label="返回" style="margin-left:-10px">${ic('back')}</button>`:''}<h1>${V.name==='project'?esc((proj(V.id)||{}).name||''):V.name==='pform'?(PD&&PD.id?'編輯專案':'新增專案'):V.name==='new'&&D&&D.war?'新增保固紀錄':TITLES[V.name]}</h1>${form?'':V.name==='project'?`<button class="iconbtn" data-act="pedit" aria-label="編輯專案">${ic('pen')}</button>`:`<button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`}`}
+ else{const form=V.name==='new'||V.name==='pform';const sub=stack.length&&!form||['project','urgent','cat','check','buy'].includes(V.name);
+  top.innerHTML=`${sub||form?`<button class="iconbtn" data-act="back" aria-label="返回" style="margin-left:-10px">${ic('back')}</button>`:''}<h1>${V.name==='project'?esc((proj(V.id)||{}).name||''):V.name==='pform'?(PD&&PD.id?'編輯專案':'新增專案'):V.name==='new'&&D&&D.editId?'編輯紀錄':V.name==='new'&&D&&D.war?'新增保固紀錄':V.name==='new'&&D&&D.category===BUY?'新增採購':TITLES[V.name]}</h1>${form?'':V.name==='project'?`<button class="iconbtn" data-act="pedit" aria-label="編輯專案">${ic('pen')}</button>`:`<button class="iconbtn" data-act="settings" aria-label="設定">${ic('gear')}</button>`}`}
  const m=document.getElementById('main');
- m.innerHTML=({home:vHome,projects:vProjects,project:vProject,records:vRecords,todos:vTodos,new:vNew,urgent:vUrgent,cat:vCat,pform:vPForm,check:vCheck})[V.name]();
+ m.innerHTML=({home:vHome,projects:vProjects,project:vProject,records:vRecords,todos:vTodos,new:vNew,urgent:vUrgent,cat:vCat,pform:vPForm,check:vCheck,buy:vBuy})[V.name]();
  const nav=document.getElementById('nav');
  nav.hidden=(V.name==='new'||V.name==='pform')&&innerWidth<900;
- const cur=V.name==='project'||V.name==='check'?'projects':V.name==='urgent'?'todos':V.name==='cat'?'home':V.name;const ot=openTodos().filter(r=>r.due&&diff(r.due)<=0).length;
+ const cur=V.name==='project'||V.name==='check'?'projects':V.name==='urgent'||V.name==='buy'?'todos':V.name==='cat'?'home':V.name;const ot=openTodos().filter(r=>r.due&&diff(r.due)<=0).length;
  nav.innerHTML=`<div class="nav-in">
   <a class="${cur==='home'?'on':''}" data-act="tab" data-v="home">${ic('home')}<small>首頁</small></a>
   <a class="${cur==='projects'?'on':''}" data-act="tab" data-v="projects">${ic('folder')}<small>專案</small></a>
@@ -1161,7 +1309,10 @@ function bindView(){
  const q=document.getElementById('q');
  if(q)q.addEventListener('input',e=>{ui.q=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}});
  const t=document.getElementById('txt');
- if(t){t.addEventListener('input',e=>{D.text=e.target.value;const b=document.querySelector('[data-act=save]');if(b)b.disabled=!(D.projectId&&(D.text.trim()||D.photos.length))});}
+ const upSave=()=>{const b=document.querySelector('[data-act=save]');if(b)b.disabled=!canSave()};
+ if(t){t.addEventListener('input',e=>{D.text=e.target.value;upSave()});}
+ document.querySelectorAll('[data-it]').forEach(el=>el.addEventListener('input',e=>{const [i,f]=el.dataset.it.split(':');if(D.items[+i])D.items[+i][f]=e.target.value;upSave()}));
+ const vi=document.getElementById('venIn');if(vi)vi.addEventListener('input',e=>{D.vendor=e.target.value});
  const di=document.getElementById('dueIn');if(di)di.addEventListener('change',e=>{D.due=e.target.value;D.customDue=true;render()});
  ['camIn','libIn'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',onPhotos)});
 }
@@ -1188,13 +1339,16 @@ function recSheet(id){
  const d=new Date(r.ts);
  sheet(`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="pill c-${r.category}">${r.category}</span>${r.urgent&&r.status==='open'?'<span class="pill c-問題">緊急</span>':''}<span class="muted" style="font-size:13px">${md(iso(d))} <span class="num">${hm(r.ts)}</span> · ${esc(short(r.by))}</span></div>
   <h3>${esc(p?p.name:'')}</h3>
+  ${r.editedAt?`<div class="edited">已編輯 · ${esc(r.editedBy||'')} ${md(iso(r.editedAt))} ${hm(r.editedAt)}</div>`:''}
   ${r.text?`<p style="font-size:16px;margin:8px 0 0;overflow-wrap:anywhere">${esc(r.text)}</p>`:''}
+  ${r.category===BUY&&r.items.length?`<div style="margin-top:12px">${buyList(r,true)}</div>`:''}
   ${r.photos.length?`<div class="imgs">${r.photos.map((s,i)=>phImg(s,`data-act="view" data-id="${r.id}" data-v="${i}"`)).join('')}</div>`:''}
-  ${isTodo(r)?`<div class="card" style="box-shadow:none;background:var(--surface-2);margin-top:12px;padding:12px 14px"><dl class="kv" style="margin:0"><dt>記錄人</dt><dd>${esc(r.by)}</dd><dt>負責人</dt><dd>${esc(r.assignee)}</dd><dt>期限</dt><dd>${r.due?`${md(r.due)} <span class="${r.status==='done'?'':dueCls(r.due)}">${r.status==='done'?'':'· '+rel(r.due)}</span>`:'未設定'}</dd><dt>狀態</dt><dd>${r.status==='done'?'已完成'+(r.doneBy?`（${esc(r.doneBy)}）`:''):'處理中'}</dd></dl></div>`:''}
+  ${isTodo(r)?`<div class="card" style="box-shadow:none;background:var(--surface-2);margin-top:12px;padding:12px 14px"><dl class="kv" style="margin:0"><dt>記錄人</dt><dd>${esc(r.by)}</dd><dt>負責人</dt><dd>${esc(r.assignee)}</dd><dt>${r.category===BUY?'到場日':'期限'}</dt><dd>${r.due?`${md(r.due)} <span class="${r.status==='done'?'':dueCls(r.due)}">${r.status==='done'||rel(r.due)===md(r.due)?'':'· '+rel(r.due)}</span>`:'未設定'}</dd><dt>狀態</dt><dd>${r.status==='done'?'已完成'+(r.doneBy?`（${esc(r.doneBy)}）`:''):'處理中'}</dd></dl></div>`:''}
   <div class="sheet-actions">
    ${isTodo(r)?`<button class="${r.status==='done'?'ghost':'bigbtn'}" style="grid-column:1/-1" data-act="toggle" data-id="${r.id}" data-keep="1">${ic(r.status==='done'?'undo':'check')}${r.status==='done'?'改回未完成':'標記完成'}</button>`:''}
-   ${p?`<button class="ghost" data-act="proj" data-id="${p.id}">查看專案</button>`:''}
+   <button class="ghost" data-act="edit" data-id="${r.id}">${ic('pen','sm')}編輯</button>
    <button class="ghost danger" data-act="delask" data-id="${r.id}">${ic('trash','sm')}刪除</button>
+   ${p&&V.name!=='project'?`<button class="ghost" style="grid-column:1/-1" data-act="proj" data-id="${p.id}">查看專案</button>`:''}
   </div>`)}
 /* ---------- toast ---------- */
 let tt;function toast(m){clearTimeout(tt);let el=document.querySelector('.toast');if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=m;tt=setTimeout(()=>el.remove(),2400)}
@@ -1260,13 +1414,21 @@ document.addEventListener('click',e=>{
   case'ts':ui.tscope=v;render();break;
   case'ptab':ui.ptab=v;render();break;
   case'dp':D.projectId=v;render();break;
-  case'dc':D.category=v;render();break;
+  case'dc':D.category=v;if(v===BUY)initBuy();render();break;
+  case'itadd':D.items.push(newItem());render();setTimeout(()=>{const x=document.querySelectorAll('[data-it$=":name"]');if(x.length)x[x.length-1].focus()},30);break;
+  case'itdel':D.items.splice(+v,1);if(!D.items.length)D.items.push(newItem());render();break;
+  case'ist':setItemStatus(id,v,el.dataset.s,el.dataset.keep);break;
+  case'buy':close();go('buy');break;
+  case'newbuy':close();newDraft(id||null);if(id)D.projectId=id;D.category=BUY;initBuy();go('new');break;
+  case'bp':ui.bproj=v;render();break;
+  case'bv':ui.bven=v;render();break;
+  case'edit':close();if(editDraft(id))go('new');break;
   case'da':D.assignee=v;if(v&&!D.due)D.due=addD(1);if(!v){D.due='';D.urgent=false;D.customDue=false}render();break;
   case'dd':D.due=v;D.customDue=false;render();break;
   case'ddc':D.customDue=true;render();setTimeout(()=>{const i=document.getElementById('dueIn');if(i){i.focus();try{i.showPicker()}catch(_){}}},50);break;
   case'du':D.urgent=!D.urgent;render();break;
   case'rmph':D.photos.splice(+v,1);render();break;
-  case'save':saveRecord();break;
+  case'save':D&&D.editId?saveEdit():saveRecord();break;
   case'view':{const r=S.records.find(x=>x.id===id);const box=document.createElement('div');box.className='viewer';box.innerHTML=`<img src="${PHC[r.photos[+v]]||BLANK}" alt="現場照片"><button aria-label="關閉">${ic('x')}</button>`;box.onclick=()=>box.remove();document.body.appendChild(box);break}
   case'delask':sheet(`<h3>刪除這筆紀錄？</h3><p class="muted" style="margin:6px 0 16px">刪除後無法復原。</p><div class="sheet-actions"><button class="ghost" data-act="rec" data-id="${id}">取消</button><button class="bigbtn" style="background:var(--bad)" data-act="del" data-id="${id}">刪除</button></div>`);break;
   case'del':deleteRecord(id);break;

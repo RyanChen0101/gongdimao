@@ -58,6 +58,11 @@ create table if not exists public.records (
 );
 -- 舊版資料庫補欄位（可重複執行）
 alter table public.records add column if not exists done_by text;
+-- 採購品項與編輯紀錄（v5）
+alter table public.records add column if not exists items jsonb not null default '[]';
+alter table public.records add column if not exists vendor text not null default '';
+alter table public.records add column if not exists edited_at timestamptz;
+alter table public.records add column if not exists edited_by text;
 create index if not exists records_project_idx on public.records(project_id);
 create index if not exists records_ts_idx on public.records(ts desc);
 
