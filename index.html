@@ -447,7 +447,8 @@ const ITEMS=[
 const LOOK0={pose:'sit',fur:'fur_orange',hat:'hat_yellow',body:'',face:'',prop:'',bg:'bg_plain'};
 function points(){
  const per={};let total=0;
- const add=(who,n)=>{if(!who||who==='業主')return;per[who]=(per[who]||0)+n;total+=n};
+ const mem=new Set((S.profiles||[]).map(x=>x.name));
+ const add=(who,n)=>{if(!who||!mem.has(who))return;per[who]=(per[who]||0)+n;total+=n};
  S.records.forEach(r=>{
   add(r.by,10);if(r.photos&&r.photos.length)add(r.by,5);if(r.assignee)add(r.by,2);
   if(r.assignee&&r.status==='done'){const w=r.assignee==='全員'?(r.doneBy||'全員'):r.assignee;add(w,15);if(r.due&&r.doneAt&&iso(r.doneAt)<=r.due)add(w,5)}
@@ -582,7 +583,7 @@ function vCat(){
   <div class="card" style="padding:6px 14px">${people.map(([who,v])=>`<div class="lb"><span class="lbn">${esc(short(who))}</span><span class="cbar"><i style="width:${Math.round(v/max*100)}%"></i></span><b class="num">${v}</b></div>`).join('')||'<p class="muted">還沒有人拿到點數</p>'}</div>
   <div class="sec"><h2>怎麼拿點數</h2></div>
   <div class="card" style="padding:4px 14px">${RULES.map(([t,n,w])=>`<div class="rule"><span>${t}<small>${w}</small></span><b class="num">+${n}</b></div>`).join('')}</div>
-  <p class="hint">完成後若改回未完成，點數會收回；刪除紀錄也會扣回該筆點數。目前點數只算這台裝置上的紀錄，第二階段接上雲端後全公司共用。</p>`}
+  <p class="hint">只有公司成員會得到點數；指派給師傅、廠商或業主的待辦，完成後不計點數。指派給「全員」的待辦，點數給按下完成的人。完成後若改回未完成，點數會收回；刪除紀錄也會扣回該筆點數。</p>`}
 /* call after any change that can earn points */
 function award(before,msg){
  const after=points().total,gain=after-before;
