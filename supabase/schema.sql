@@ -118,7 +118,9 @@ drop policy if exists "修改自己的資料" on public.profiles;
 create policy "修改自己的資料" on public.profiles for update to authenticated using (id = auth.uid());
 -- 一般成員不能把自己改成總監權限
 revoke update on public.profiles from authenticated;
-grant update (name, role) on public.profiles to authenticated;
+-- 每人各自的 Yuzu 造型（v8）
+alter table public.profiles add column if not exists look jsonb;
+grant update (name, role, look) on public.profiles to authenticated;
 
 drop policy if exists "成員全權" on public.contacts;
 create policy "成員全權" on public.contacts for all to authenticated using (true) with check (true);

@@ -150,6 +150,12 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:8px calc(va
 .itcard .itx{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--ink-3)}
 .itlist{display:flex;flex-direction:column;gap:8px}
 .edited{font-size:11.5px;color:var(--ink-3)}
+.yuzus{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+.yz{background:var(--surface);border-radius:var(--r);padding:8px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;box-shadow:var(--shadow);border:2px solid transparent}
+.yz.me{border-color:var(--accent)}
+.yz img{width:100%;height:auto;max-width:120px;border-radius:10px;display:block;margin-bottom:4px}
+.yz b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yz small{font-size:11.5px;color:var(--ink-3)}
 .rw{display:flex;gap:12px;align-items:center;padding:12px 14px;min-height:62px}
 .rw + .rw{border-top:1px solid var(--line)}
 .rwe{font-size:26px;width:36px;text-align:center;flex:none;line-height:1}
@@ -652,8 +658,10 @@ function vCat(){
    <div class="cbar" style="margin:8px 0 6px"><i style="width:${pct}%"></i></div>
    <div class="muted" style="font-size:13px">${n?`下一個：「${n.name}」，還差 <b class="num" style="color:var(--ink)">${n.pts-total}</b> 點（已解鎖 ${un.size}／${ITEMS.length}）`:'全部 '+ITEMS.length+' 項都解鎖了，大家辛苦了！'}</div>
   </div>
+  ${S.profiles.length>1&&!LOOK_MISSING?`<div class="sec"><h2>大家的 Yuzu</h2><span class="muted" style="font-size:12px">各自打扮</span></div>
+  <div class="yuzus">${S.profiles.map(p=>`<div class="yz ${ME&&p.id===ME.id?'me':''}">${catSVG(lookOf(p),120)}<b>${esc(p.name)}</b><small>${esc(p.role||'')}${ME&&p.id===ME.id?' · 我':''}</small></div>`).join('')}</div>`:''}
   ${rwSection(total)}
-  <div class="sec"><h2>幫貓咪換造型</h2></div>
+  <div class="sec"><h2>${LOOK_MISSING?'幫貓咪換造型':'幫我的 Yuzu 換造型'}</h2></div>
   <div class="chips">${SLOTS.map(([k,l])=>`<button class="chip ${slot===k?'on':''}" data-act="cslot" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="itemgrid">
    ${OPTIONAL.includes(slot)?`<button class="item ${!S.cat[slot]?'on':''}" data-act="equip" data-v="" data-s="${slot}"><span class="none">不戴</span><b>不使用</b></button>`:''}
@@ -798,12 +806,26 @@ async function loadAll(){
     cat:t.cat&&Object.keys(t.cat).length?Object.assign({},LOOK0,t.cat):null,
     seen:Array.isArray(t.seen)&&t.seen.length?t.seen:null,rewards:Array.isArray(t.rewards)?t.rewards:[]};
  RW_MISSING=tm&&tm[0]?!('rewards' in tm[0]):false;
+ LOOK_MISSING=pf.length?!('look' in pf[0]):false;
+ S.teamCat=S.cat?Object.assign({},S.cat):null;
  const fresh=!S.cat||!S.seen;
  ME=pf.find(p=>p.id===(API.sess.user||{}).id)||null;
+ if(!LOOK_MISSING&&ME&&ME.look&&Object.keys(ME.look).length)S.cat=Object.assign({},LOOK0,ME.look);
  rebuildPeople();ensureCat();
  if(fresh&&ME)saveTeam();
 }
-function saveTeam(){return API.upd('team',1,{cat:S.cat,seen:S.seen,updated_at:new Date().toISOString()}).catch(e=>toast(errMsg(e)))}
+let LOOK_MISSING=false;
+function saveTeam(){const pl={seen:S.seen,updated_at:new Date().toISOString()};if(LOOK_MISSING||!S.teamCat){pl.cat=S.cat;S.teamCat=Object.assign({},S.cat)}return API.upd('team',1,pl).catch(e=>toast(errMsg(e)))}
+function saveLook(){
+ if(LOOK_MISSING||!ME){S.teamCat=Object.assign({},S.cat);return API.upd('team',1,{cat:S.cat,updated_at:new Date().toISOString()}).catch(e=>toast(errMsg(e)))}
+ ME.look=Object.assign({},S.cat);
+ return API.upd('profiles',ME.id,{look:S.cat}).catch(e=>toast(errMsg(e)))
+}
+function lookOf(p){
+ const base=Object.assign({},LOOK0,(!LOOK_MISSING&&p.look&&Object.keys(p.look).length)?p.look:(S.teamCat||{}));
+ if(ME&&p.id===ME.id)return S.cat;
+ const un=unlockedSet(points().total);for(const k in LOOK0){const v=base[k];if(v&&!un.has(v))base[k]=OPTIONAL.includes(k)?'':LOOK0[k]}
+ return base}
 const isAuthErr=e=>e&&(e.auth||e.status===401);
 function errMsg(e){
  if(!navigator.onLine||e instanceof TypeError)return '沒有網路連線，請稍後再試';
@@ -1571,7 +1593,7 @@ document.addEventListener('click',e=>{
   case'cslot':ui.cslot=v;render();break;
   case'equip':{const slot=el.dataset.s;const t=points().total;const it=ITEMS.find(i=>i.id===v);
    if(it&&it.pts>t){toast(`「${it.name}」還差 ${it.pts-t} 點解鎖`);break}
-   S.cat[slot]=v;saveTeam();if(el.dataset.go){close();if(V.name==='cat')render();else go('cat');toast(`換上「${it.name}」`)}else render();break}
+   S.cat[slot]=v;saveLook();if(el.dataset.go){close();if(V.name==='cat')render();else go('cat');toast(`換上「${it.name}」`)}else render();break}
   case'pf':ui.pfilter=v;render();break;
   case'rp':ui.rproj=v;render();break;
   case'rc':ui.rcat=v;render();break;
