@@ -150,6 +150,14 @@ main{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:8px calc(va
 .itcard .itx{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--ink-3)}
 .itlist{display:flex;flex-direction:column;gap:8px}
 .edited{font-size:11.5px;color:var(--ink-3)}
+.brow{display:flex;gap:10px;align-items:center;min-height:44px}
+.brow .bname{flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.brow.done .bt{color:var(--ink-3);text-decoration:line-through}
+.ordtag{flex:none;min-height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink-3);align-self:center}
+.ordtag.on{background:var(--mat-soft);border-color:transparent;color:var(--mat);font-weight:700}
+.mchk{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);display:inline-grid;place-items:center;flex:none;color:transparent;margin-top:2px}
+.mchk.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.mchk svg.i{width:12px;height:12px;stroke-width:3}
 .bigbtn.warbtn{background:var(--war);color:#fff}
 
 .bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;flex:1}
@@ -584,8 +592,9 @@ function award(before,msg){
   sheet(`<div class="celebrate">${catSVG(previewLook(it),200)}<div class="eyebrow" style="color:var(--warn)">團隊解鎖新造型</div><h3>「${it.name}」</h3><p class="muted" style="margin:0">${msg?esc(msg)+' · ':''}團隊累積 <b class="num">${after}</b> 點${fresh.length>1?`，一次解鎖 ${fresh.length} 項`:''}</p></div>
    <div class="sheet-actions"><button class="ghost" data-act="close">等等再說</button><button class="bigbtn" data-act="equip" data-v="${it.id}" data-s="${it.slot}" data-go="1">立刻換上</button></div>`);
   return true}
- if(gain>0)toast(`${msg?msg+'，':''}團隊 +${gain} 點`);
- else if(gain<0)toast(`${msg?msg+'，':''}團隊 ${gain} 點`);
+ const sep=msg?msg+(/[！!]$/.test(msg)?' ':'，'):'';
+ if(gain>0)toast(`${sep}團隊 +${gain} 點`);
+ else if(gain<0)toast(`${sep}團隊 ${gain} 點`);
  else if(msg)toast(msg);
  return false}
 
@@ -780,8 +789,6 @@ async function clToggle(id){
 /* ---------- 採購 ---------- */
 const BUY='採購';
 const IST={todo:'待採購',ordered:'已下訂',arrived:'已到貨'};
-const INEXT={todo:'ordered',ordered:'arrived'};
-const INEXT_L={todo:'標記下訂',ordered:'標記到貨'};
 const UNITS=['箱','支','片','組','個','坪','才','卷','包','桶','式','米'];
 let V5_MISSING=false;
 const newItem=()=>({id:uuid().slice(0,8),name:'',spec:'',qty:'',unit:'',status:'todo',by:'',at:null});
@@ -798,27 +805,35 @@ function buyFlag(r,it){
  if(it.status==='ordered'&&n<0)return `<span class="due-over">逾期 ${-n} 天未到貨</span>`;
  return '';
 }
+function itemMeta(it){
+ if(it.status==='arrived')return `到貨 ${it.at?md(iso(it.at)):''}${it.by?' · '+esc(it.by):''}`;
+ if(it.status==='ordered'&&it.ordAt)return `下訂 ${md(iso(it.ordAt))}${it.ordBy?' · '+esc(it.ordBy):''}`;
+ return '';
+}
+function ordTag(r,it,keep){return it.status==='arrived'?'':`<button class="ordtag ${it.status==='ordered'?'on':''}" data-act="iord" data-id="${r.id}" data-v="${it.id}" ${keep?'data-keep="1"':''} aria-pressed="${it.status==='ordered'}">已下訂</button>`}
 function buyList(r,interactive){
- return `<div class="blist">${r.items.map(it=>`<div class="bitem ${it.status==='arrived'?'done':''}">
-   <span class="pill s-${it.status}">${IST[it.status]}</span><span class="bname">${esc(itemLine(it))}</span></div>
-   ${interactive?`<div class="seg">${['todo','ordered','arrived'].map(s=>`<button class="${it.status===s?'on':''}" data-act="ist" data-id="${r.id}" data-v="${it.id}" data-s="${s}" data-keep="1">${IST[s]}</button>`).join('')}</div>${it.by&&it.status!=='todo'?`<div class="edited" style="margin:-2px 0 4px">${esc(it.by)} 標記${IST[it.status]}${it.at?' · '+md(iso(it.at)):''}</div>`:''}`:''}`).join('')}
+ return `<div class="blist">${r.items.map(it=>interactive?`<div class="brow ${it.status==='arrived'?'done':''}">
+   <button class="chk ${it.status==='arrived'?'on':''}" data-act="ichk" data-id="${r.id}" data-v="${it.id}" data-keep="1" aria-label="${it.status==='arrived'?'改回未到貨':'標記到貨'}">${ic('check','sm')}</button>
+   <div class="bname"><span class="bt">${esc(itemLine(it))}</span>${itemMeta(it)?`<div class="edited">${itemMeta(it)}</div>`:''}</div>${ordTag(r,it,true)}</div>`
+  :`<div class="bitem ${it.status==='arrived'?'done':''}"><span class="mchk ${it.status==='arrived'?'on':''}">${ic('check')}</span><span class="bname">${esc(itemLine(it))}</span>${it.status==='ordered'?'<span class="pill s-ordered" style="height:20px">已下訂</span>':''}</div>`).join('')}
   ${r.vendor?`<div class="meta">${ic('folder','sm')}<span>廠商：${esc(r.vendor)}</span></div>`:''}</div>`}
 function buyRows(list,showProj){
  if(!list.length)return '';
  return `<div class="card">${list.map(({r,it})=>{const p=proj(r.projectId);const f=buyFlag(r,it);
   return `<div class="todo ${it.status==='arrived'?'done':''}">
+   <button class="chk ${it.status==='arrived'?'on':''}" data-act="ichk" data-id="${r.id}" data-v="${it.id}" aria-label="${it.status==='arrived'?'改回未到貨':'標記到貨'}">${ic('check','sm')}</button>
    <div class="b" data-act="rec" data-id="${r.id}"><p>${esc(itemLine(it))}</p>
-    <div class="meta">${showProj&&p?`<span>${esc(p.name)}</span>`:''}${r.vendor?`<span>${esc(r.vendor)}</span>`:''}${r.due?`<span>到場 ${md(r.due)}</span>`:''}${f}</div></div>
-   ${INEXT[it.status]?`<button class="quick" data-act="ist" data-id="${r.id}" data-v="${it.id}" data-s="${INEXT[it.status]}">${INEXT_L[it.status]}</button>`:`<span class="pill s-arrived">已到貨</span>`}
+    <div class="meta">${showProj&&p?`<span>${esc(p.name)}</span>`:''}${r.vendor?`<span>${esc(r.vendor)}</span>`:''}${it.status==='arrived'?`<span>${itemMeta(it)}</span>`:r.due?`<span>到場 ${md(r.due)}</span>`:''}${f}</div></div>
+   ${ordTag(r,it,false)}
   </div>`}).join('')}</div>`}
 function buyItems(pid){
  const out=[];S.records.forEach(r=>{if(r.category!==BUY||(pid&&r.projectId!==pid))return;(r.items||[]).forEach(it=>out.push({r,it}))});
  return out.sort((a,b)=>(a.r.due||'9999').localeCompare(b.r.due||'9999'));
 }
 function buySections(list,showProj){
- const g=s=>list.filter(x=>x.it.status===s);
- const arrived=g('arrived').sort((a,b)=>(b.it.at||0)-(a.it.at||0)).slice(0,15);
- return [['todo','待採購'],['ordered','已下訂']].map(([s,l])=>g(s).length?`<div class="day">${l}<span class="num">${g(s).length}</span></div>${buyRows(g(s),showProj)}`:'').join('')
+ const open=list.filter(x=>x.it.status!=='arrived');
+ const arrived=list.filter(x=>x.it.status==='arrived').sort((a,b)=>(b.it.at||0)-(a.it.at||0)).slice(0,15);
+ return (open.length?`<div class="day">未到貨<span class="num">${open.length}</span></div>${buyRows(open,showProj)}`:'')
   +(arrived.length?`<div class="day">最近到貨</div>${buyRows(arrived,showProj)}`:'')}
 function vBuy(){
  if(V5_MISSING)return empty('採購清單尚未啟用','請在 Supabase 執行最新的 schema.sql。');
@@ -837,15 +852,25 @@ function initBuy(){
  if(!D.items||!D.items.length)D.items=[newItem()];
  if(!D.editId&&!D.assignee){D.assignee=firstPm(proj(D.projectId));if(!D.due)D.due=addD(7)}
 }
-async function setItemStatus(rid,iid,st,keep){
- const r=S.records.find(x=>x.id===rid);if(!r)return;const it=(r.items||[]).find(x=>x.id===iid);if(!it||it.status===st)return;
+async function itemToggle(rid,iid,kind,keep){
+ const r=S.records.find(x=>x.id===rid);if(!r)return;const it=(r.items||[]).find(x=>x.id===iid);if(!it)return;
+ if(kind==='ord'&&it.status==='arrived')return;
+ const prev=it.status;
+ const st=kind==='chk'?(prev==='arrived'?(it.ordAt?'ordered':'todo'):'arrived'):(prev==='ordered'?'todo':'ordered');
  const snap=JSON.stringify({items:r.items,status:r.status,doneAt:r.doneAt,doneBy:r.doneBy});const before=points().total;
- it.status=st;it.by=ME?ME.name:'';it.at=Date.now();
+ const me=ME?ME.name:'';
+ it.status=st;
+ if(st==='arrived'){it.at=Date.now();it.by=me}
+ else{it.at=null;it.by=''}
+ if(st==='ordered'&&prev==='todo'){it.ordAt=Date.now();it.ordBy=me}
+ if(st==='todo'){delete it.ordAt;delete it.ordBy}
  const all=r.items.every(x=>x.status==='arrived');
- if(all&&r.status!=='done'){r.status='done';r.doneAt=Date.now();r.doneBy=ME?ME.name:''}
+ if(all&&r.status!=='done'){r.status='done';r.doneAt=Date.now();r.doneBy=me}
  else if(!all&&r.status==='done'){r.status='open';r.doneAt=null;r.doneBy=''}
  render();
- const shown=award(before,all?'全部到貨了！':`${it.name||'品項'} ${IST[st]}`);
+ const nm=it.name||'品項';
+ const msg=all?'全部到貨了！':st==='arrived'?`${nm} 已到貨`:st==='ordered'&&prev==='todo'?`${nm} 已下訂`:prev==='arrived'?`${nm} 改回未到貨`:`${nm} 取消下訂`;
+ const shown=award(before,msg);
  if(!shown&&keep)recSheet(rid);
  try{await API.upd('records',rid,{items:r.items,status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null,done_by:r.doneBy||null})}
  catch(e){Object.assign(r,JSON.parse(snap));render();toast(errMsg(e))}
@@ -946,7 +971,7 @@ async function toggleRecord(id,keep){
  const r=S.records.find(x=>x.id===id);if(!r)return;
  const prev={status:r.status,doneAt:r.doneAt},before=points().total;
  const prevBy=r.doneBy;prev.items=JSON.parse(JSON.stringify(r.items||[]));r.status=r.status==='done'?'open':'done';r.doneAt=r.status==='done'?Date.now():null;r.doneBy=r.status==='done'&&ME?ME.name:'';prev.doneBy=prevBy;
- if(isBuy(r)){r.items.forEach(it=>{if(r.status==='done'&&it.status!=='arrived'){it.status='arrived';it.by=r.doneBy;it.at=Date.now()}else if(r.status==='open'&&it.status==='arrived'){it.status='ordered'}})}
+ if(isBuy(r)){r.items.forEach(it=>{if(r.status==='done'&&it.status!=='arrived'){it.status='arrived';it.by=r.doneBy;it.at=Date.now()}else if(r.status==='open'&&it.status==='arrived'){it.status=it.ordAt?'ordered':'todo';it.at=null;it.by=''}})}
  render();const shown=award(before,r.status==='done'?`${r.assignee==='全員'?(ME?ME.name:'有人'):short(r.assignee)} 完成了`:'已改回未完成');
  if(!shown&&keep)recSheet(id);
  const patch={status:r.status,done_at:r.doneAt?new Date(r.doneAt).toISOString():null,done_by:r.doneBy||null};if(isBuy(r))patch.items=r.items;
@@ -1417,7 +1442,8 @@ document.addEventListener('click',e=>{
   case'dc':D.category=v;if(v===BUY)initBuy();render();break;
   case'itadd':D.items.push(newItem());render();setTimeout(()=>{const x=document.querySelectorAll('[data-it$=":name"]');if(x.length)x[x.length-1].focus()},30);break;
   case'itdel':D.items.splice(+v,1);if(!D.items.length)D.items.push(newItem());render();break;
-  case'ist':setItemStatus(id,v,el.dataset.s,el.dataset.keep);break;
+  case'ichk':itemToggle(id,v,'chk',el.dataset.keep);break;
+  case'iord':itemToggle(id,v,'ord',el.dataset.keep);break;
   case'buy':close();go('buy');break;
   case'newbuy':close();newDraft(id||null);if(id)D.projectId=id;D.category=BUY;initBuy();go('new');break;
   case'bp':ui.bproj=v;render();break;
