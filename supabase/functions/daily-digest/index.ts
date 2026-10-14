@@ -96,20 +96,47 @@ Deno.serve(async (req) => {
 
 ${lines.join('\n')}
 
-請用繁體中文（台灣用語）寫一份精簡統整，只回覆一個 JSON 物件：
-{"headline":"一句話總結今天的狀況，30 字內","points":[{"level":"hot|warn|info","text":"一個重點，40 字內，提到工地名稱與負責人","project":"工地名稱或空字串"}]}
+請用繁體中文（台灣用語）寫一份精簡統整，用 write_digest 工具回覆：headline 是一句話總結（30 字內）；points 每點 40 字內，提到工地名稱與負責人，project 填工地名稱（沒有就空字串）。
 規則：points 3–6 點，依重要性排序；hot＝工安、逾期、今天到期、擋住後續工序；warn＝快到期、未下訂的採購、需要回覆業主的事、留言中提到的問題；info＝進度與好消息。只根據資料，不要編造。沒有資料時就說今天沒有需要特別注意的事。`;
 
     const ai = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 2000,
+        tools: [{
+          name: 'write_digest',
+          description: '寫出今天的工地統整',
+          input_schema: {
+            type: 'object',
+            properties: {
+              headline: { type: 'string', description: '一句話總結今天的狀況，30 字內' },
+              points: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    level: { type: 'string', enum: ['hot', 'warn', 'info'] },
+                    text: { type: 'string' },
+                    project: { type: 'string' },
+                  },
+                  required: ['level', 'text'],
+                },
+              },
+            },
+            required: ['headline', 'points'],
+          },
+        }],
+        tool_choice: { type: 'tool', name: 'write_digest' },
+        messages: [{ role: 'user', content: prompt }],
+      }),
     });
     if (!ai.ok) throw new Error('AI ' + ai.status + ' ' + (await ai.text()).slice(0, 200));
     const out = await ai.json();
-    const txt = (out.content || []).map((c: any) => c.text || '').join('');
-    const m = txt.match(/\{[\s\S]*\}/);
-    const data = JSON.parse(m ? m[0] : txt);
+    const tool = (out.content || []).find((c: any) => c.type === 'tool_use');
+    if (!tool || !tool.input) throw new Error('AI 沒有回傳統整（stop_reason=' + out.stop_reason + '）');
+    const data = tool.input;
     const summary = {
       headline: String(data.headline || ''),
       points: (Array.isArray(data.points) ? data.points : []).slice(0, 8).map((p: any) => ({
