@@ -192,3 +192,36 @@ language sql stable security definer set search_path = public, storage as $$
 $$;
 revoke all on function public.photo_usage() from public, anon;
 grant execute on function public.photo_usage() to authenticated;
+
+-- 留言（v8）
+create table if not exists public.comments (
+  id uuid primary key default gen_random_uuid(),
+  record_id uuid not null references public.records(id) on delete cascade,
+  text text not null check (char_length(text) between 1 and 2000),
+  by_name text not null default '',
+  by_id uuid default auth.uid(),
+  created_at timestamptz not null default now()
+);
+create index if not exists comments_record_idx on public.comments(record_id);
+create index if not exists comments_created_idx on public.comments(created_at);
+alter table public.comments enable row level security;
+drop policy if exists "成員可看留言" on public.comments;
+create policy "成員可看留言" on public.comments for select to authenticated using (true);
+drop policy if exists "成員可留言" on public.comments;
+create policy "成員可留言" on public.comments for insert to authenticated with check (by_id = auth.uid());
+drop policy if exists "本人或總監可刪留言" on public.comments;
+create policy "本人或總監可刪留言" on public.comments for delete to authenticated using (by_id = auth.uid() or public.is_admin());
+
+-- AI 每日統整（v8）
+create table if not exists public.daily_digest (
+  day date primary key,
+  status text not null default 'pending',
+  summary jsonb,
+  error text,
+  by_name text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.daily_digest enable row level security;
+drop policy if exists "成員全權" on public.daily_digest;
+create policy "成員全權" on public.daily_digest for all to authenticated using (true) with check (true);
