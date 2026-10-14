@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const URL_ = Deno.env.get('SUPABASE_URL')!;
   const auth = req.headers.get('Authorization') || '';
   const apikey = req.headers.get('apikey') || '';
-  const KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  const KEY = Deno.env.get('ANTHROPIC_API_KEY') || Deno.env.get('ANTHROPIC_API_KE');
   if (!KEY) return json({ error: 'missing_key' }, 500);
 
   const rest = (path: string, init: RequestInit = {}) =>
